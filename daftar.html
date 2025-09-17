@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daftar - Regenerasi Petani</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" />
+  <script src="https://unpkg.com/alpinejs" defer></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          animation: {
+            'fade-in': 'fadeIn 1s ease-in-out',
+            'slide-up': 'slideUp 0.8s ease-out',
+            'float': 'float 3s ease-in-out infinite',
+            'bounce-slow': 'bounce 3s infinite',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0px);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .step-indicator {
+      transition: all 0.3s ease;
+    }
+
+    .step-indicator.active {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      transform: scale(1.1);
+    }
+
+    .step-indicator.completed {
+      background: #10b981;
+      color: white;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 relative overflow-hidden"
+  x-data="registerApp()">
+
+  <!-- Background decoration -->
+  <div class="absolute inset-0 overflow-hidden">
+    <div
+      class="absolute -top-40 -right-40 w-80 h-80 bg-green-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float">
+    </div>
+    <div
+      class="absolute -bottom-40 -left-40 w-80 h-80 bg-emerald-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float"
+      style="animation-delay: 1s;"></div>
+    <div
+      class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-teal-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float"
+      style="animation-delay: 2s;"></div>
+
+    <!-- Floating icons -->
+    <div class="absolute top-20 left-20 text-4xl opacity-10 animate-bounce-slow">🌾</div>
+    <div class="absolute top-40 right-32 text-3xl opacity-10 animate-bounce-slow" style="animation-delay: 1s;">🚜</div>
+    <div class="absolute bottom-32 left-40 text-3xl opacity-10 animate-bounce-slow" style="animation-delay: 2s;">🌱
+    </div>
+    <div class="absolute bottom-20 right-20 text-4xl opacity-10 animate-bounce-slow" style="animation-delay: 0.5s;">🌻
+    </div>
+  </div>
+
+  <!-- Back to Home -->
+  <div class="absolute top-4 left-4 z-50">
+    <a href="index.html" class="btn btn-ghost btn-sm glass hover:bg-white/30 transition-all duration-300">
+      ← Kembali ke Beranda
+    </a>
+  </div>
+
+  <!-- Login Link -->
+  <div class="absolute top-4 right-4 z-50">
+    <a href="login.html"
+      class="btn btn-outline btn-success btn-sm glass hover:bg-green-600 hover:text-white transition-all duration-300">
+      Sudah punya akun? Masuk
+    </a>
+  </div>
+
+  <!-- Main Container -->
+  <div class="min-h-screen flex items-center justify-center p-4 relative z-10">
+    <div class="w-full max-w-6xl bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden animate-fade-in">
+
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-8">
+        <div class="text-center">
+          <div
+            class="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-4 animate-float">
+            🌱
+          </div>
+          <h1 class="text-3xl md:text-4xl font-bold mb-2">Bergabung dengan Regenerasi Petani</h1>
+          <p class="text-green-100 text-lg">Mulai perjalanan digital pertanian Anda bersama 10,000+ petani lainnya</p>
+        </div>
+
+        <!-- Step Indicator -->
+        <div class="flex justify-center mt-8">
+          <div class="flex space-x-4">
+            <template x-for="(step, index) in steps" :key="index">
+              <div class="flex items-center">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold step-indicator"
+                  :class="{
+                    'active': currentStep === index,
+                    'completed': currentStep > index,
+                    'bg-white/20 text-white': currentStep < index
+                  }" x-text="index + 1">
+                </div>
+                <div x-show="index < steps.length - 1" class="w-16 h-1 bg-white/20 ml-2"></div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <div class="text-center mt-4">
+          <p class="text-green-100" x-text="steps[currentStep]"></p>
+        </div>
+      </div>
+
+      <!-- Form Container -->
+      <div class="p-8">
+        <form @submit.prevent="handleSubmit()">
+
+          <!-- Step 1: Informasi Dasar -->
+          <div x-show="currentStep === 0" x-transition class="animate-slide-up">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Informasi Dasar</h2>
+
+            <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-medium text-gray-700">Nama Lengkap *</span>
+                </label>
+                <input type="text" x-model="form.fullName" placeholder="Masukkan nama lengkap Anda"
+                  class="input input-bordered focus:border-green-500 transition-all duration-300"
+                  :class="errors.fullName ? 'input-error' : ''" required />
+                <div x-show="errors.fullName" class="label">
+                  <span class="label-text-alt text-error" x-text="errors.fullName"></span>
+                </div>
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-medium text-gray-700">Email *</span>
+                </label>
+                <input type="email" x-model="form.email" placeholder="contoh@email.com"
+                  class="input input-bordered focus:border-green-500 transition-all duration-300"
+                  :class="errors.email ? 'input-error' : ''" required />
+                <div x-show="errors.email" class="label">
+                  <span class="label-text-alt text-error" x-text="errors.email"></span>
+                </div>
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-medium text-gray-700">Nomor HP/WhatsApp *</span>
+                </label>
+                <input type="tel" x-model="form.phone" placeholder="08xxxxxxxxxx"
+                  class="input input-bordered focus:border-green-500 transition-all duration-300"
+                  :class="errors.phone ? 'input-error' : ''" required />
+                <div x-show="errors.phone" class="label">
+                  <span class="label-text-alt text-error" x-text="errors.phone"></span>
+                </div>
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-medium text-gray-700">Tanggal Lahir</span>
+                </label>
+                <input type="date" x-model="form.birthDate"
+                  class="input input-bordered focus:border-green-500 transition-all duration-300" />
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-medium text-gray-700">Jenis Kelamin</span>
+                </label>
+                <select x-model="form.gender"
+                  class="select select-bordered focus:border-green-500 transition-all duration-300">
+                  <option value="">Pilih jenis kelamin</option>
+                  <option value="L">Laki-laki</option>
+                  <option value="P">Perempuan</option>
+                </select>
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-medium text-gray-700">NIK</span>
+                </label>
+                <input type="text" x-model="form.nik" placeholder="16 digit NIK" maxlength="16"
+                  class="input input-bordered focus:border-green-500 transition-all duration-300" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: Informasi Alamat -->
+          <div x-show="currentStep === 1" x-transition class="animate-slide-up">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Informasi Alamat</h2>
+
+            <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              <div class="form-control md:col-span-2">
+                <label class="label">
+                  <span class="label-text font-medium text-gray-700">Alamat Lengkap *</span>
+                </label>
+                <textarea x-model="form.address" placeholder="Masukkan alamat lengkap Anda"
+                  class="textarea textarea-bordered h-24 focus:border-green-500 transition-all duration-300"
+                  :class="errors.address ? 'textarea-error' : ''" required></textarea>
+                <div x-show="errors.address" class="label">
+                  <span class="label-text-alt text-error" x-text="errors.address"></span>
+                </div>
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-medium text-gray-700">Provinsi *</span>
+                </label>
+                <select x-model="form.province"
+                  class="select select-bordered focus:border-green-500 transition-all duration-300" required>
+                  <option value="">Pilih provinsi</option>
+                  <option value="Sulawesi Tengah">Sulawesi Tengah</option>
+                  <option value="Jawa Tengah">Jawa Tengah</option>
+                  <option value="Jawa Timur">Jawa Timur</option>
+                </select>
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-medium text-gray-700">Kabupaten/Kota *</span>
+                </label>
+                <select x-model="form.regency"
+                  class="select select-bordered focus:border-green-500 transition-all duration-300" required>
+                  <option value="">Pilih kabupaten/kota</option>
+                  <option value="Bandung">Bandung</option>
+                  <option value="Subang">Subang</option>
+                  <option value="Karawang">Karawang</option>
+                  <option value="Garut">Garut</option>
+                  <option value="Tasikmalaya">Tasikmalaya</option>
+                </select>
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-medium text-gray-700">Kecamatan</span>
+                </label>
+                <input type="text" x-model="form.district" placeholder="Nama kecamatan"
+                  class="input input-bordered focus:border-green-500 transition-all duration-300" />
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-medium text-gray-700">Kode Pos</span>
+                </label>
+                <input type="text" x-model="form.postalCode" placeholder="12345" maxlength="5"
+                  class="input input-bordered focus:border-green-500 transition-all duration-300" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: Informasi Pertanian -->
+          <div x-show="currentStep === 2" x-transition class="animate-slide-up">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Informasi Pertanian</h2>
+
+            <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-medium text-gray-700">Status Petani *</span>
+                </label>
+                <select x-model="form.farmerStatus"
+                  class="select select-bordered focus:border-green-500 transition-all duration-300" required>
+                  <option value="">Pilih status</option>
+                  <option value="Petani Pemilik">Petani Pemilik</option>
+                  <option value="Petani Penggarap">Petani Penggarap</option>
+                  <option value="Buruh Tani">Buruh Tani</option>
+                  <option value="Lainnya">Lainnya</option>
+                </select>
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-medium text-gray-700">Komoditas Utama *</span>
+                </label>
+                <input type="text" x-model="form.mainCommodity" placeholder="Contoh: Padi, Jagung, Kopi"
+                  class="input input-bordered focus:border-green-500 transition-all duration-300" required />
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-medium text-gray-700">Luas Lahan (Ha)</span>
+                </label>
+                <input type="number" step="0.01" x-model="form.landSize" placeholder="Contoh: 1.5"
+                  class="input input-bordered focus:border-green-500 transition-all duration-300" />
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-medium text-gray-700">Pengalaman Bertani (Tahun)</span>
+                </label>
+                <input type="number" x-model="form.experience" placeholder="Contoh: 5"
+                  class="input input-bordered focus:border-green-500 transition-all duration-300" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 4: Akun & Kata Sandi -->
+          <div x-show="currentStep === 3" x-transition class="animate-slide-up">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Akun & Kata Sandi</h2>
+
+            <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-medium text-gray-700">Username *</span>
+                </label>
+                <input type="text" x-model="form.username" placeholder="Pilih username unik"
+                  class="input input-bordered focus:border-green-500 transition-all duration-300"
+                  :class="errors.username ? 'input-error' : ''" required />
+                <div x-show="errors.username" class="label">
+                  <span class="label-text-alt text-error" x-text="errors.username"></span>
+                </div>
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-medium text-gray-700">Kata Sandi *</span>
+                </label>
+                <input type="password" x-model="form.password" placeholder="Minimal 6 karakter"
+                  class="input input-bordered focus:border-green-500 transition-all duration-300"
+                  :class="errors.password ? 'input-error' : ''" required />
+                <div x-show="errors.password" class="label">
+                  <span class="label-text-alt text-error" x-text="errors.password"></span>
+                </div>
+              </div>
+
+              <div class="form-control md:col-span-2">
+                <label class="label cursor-pointer">
+                  <input type="checkbox" x-model="form.terms" class="checkbox checkbox-success" required />
+                  <span class="label-text ml-2 text-gray-700">Saya menyetujui syarat & ketentuan</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Navigasi -->
+          <div class="flex justify-between items-center mt-8 max-w-4xl mx-auto">
+            <button type="button" @click="prevStep" x-show="currentStep > 0" class="btn btn-outline btn-success">
+              ← Kembali
+            </button>
+
+            <button type="button" @click="nextStep" x-show="currentStep < steps.length - 1"
+              class="btn btn-success ml-auto">
+              Lanjut →
+            </button>
+
+            <button type="submit" x-show="currentStep === steps.length - 1" class="btn btn-success ml-auto">
+              Daftar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alpine.js Script -->
+  <script>
+    function registerApp() {
+      return {
+        currentStep: 0,
+        steps: [
+          "Isi informasi dasar Anda",
+          "Lengkapi alamat Anda",
+          "Tambahkan informasi pertanian",
+          "Buat akun dan kata sandi"
+        ],
+        form: {
+          fullName: "",
+          email: "",
+          phone: "",
+          birthDate: "",
+          gender: "",
+          nik: "",
+          address: "",
+          province: "",
+          regency: "",
+          district: "",
+          postalCode: "",
+          farmerStatus: "",
+          mainCommodity: "",
+          landSize: "",
+          experience: "",
+          username: "",
+          password: "",
+          terms: false
+        },
+        errors: {},
+
+        validateStep() {
+          this.errors = {};
+          if (this.currentStep === 0) {
+            if (!this.form.fullName) this.errors.fullName = "Nama lengkap wajib diisi";
+            if (!this.form.email) this.errors.email = "Email wajib diisi";
+            if (!this.form.phone) this.errors.phone = "Nomor HP wajib diisi";
+          }
+          if (this.currentStep === 1) {
+            if (!this.form.address) this.errors.address = "Alamat wajib diisi";
+            if (!this.form.province) this.errors.province = "Provinsi wajib dipilih";
+            if (!this.form.regency) this.errors.regency = "Kabupaten/Kota wajib dipilih";
+          }
+          if (this.currentStep === 3) {
+            if (!this.form.username) this.errors.username = "Username wajib diisi";
+            if (!this.form.password || this.form.password.length < 6) {
+              this.errors.password = "Kata sandi minimal 6 karakter";
+            }
+            if (!this.form.terms) this.errors.terms = "Anda harus menyetujui syarat & ketentuan";
+          }
+          return Object.keys(this.errors).length === 0;
+        },
+
+        nextStep() {
+          if (this.validateStep()) {
+            if (this.currentStep < this.steps.length - 1) {
+              this.currentStep++;
+            }
+          }
+        },
+
+        prevStep() {
+          if (this.currentStep > 0) {
+            this.currentStep--;
+          }
+        },
+
+        handleSubmit() {
+          if (this.validateStep()) {
+            alert("Pendaftaran berhasil! Data Anda akan diproses.");
+            console.log("Data Form:", this.form);
+          }
+        }
+      }
+    }
+  </script>
+</body>
+
+</html>
