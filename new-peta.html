@@ -68,145 +68,277 @@
   </style>
 </head>
 
-<body class="bg-white" x-data="mapApp()">
+<body class="bg-gray-50" x-data="mapApp()">
 
   <!-- Navbar -->
-  <div class="navbar bg-white shadow-md fixed top-0 w-full z-50">
+  <div class="navbar transition-all duration-300 bg-white shadow-lg fixed top-0 w-full z-50">
     <div class="flex-1 px-2">
-      <a href="index.html" class="font-bold text-lg">🌱 Regenerasi Petani</a>
+      <a href="index.html" class="font-bold text-lg flex items-center space-x-2">
+        <span class="text-2xl animate-bounce">🌱</span>
+        <span class="bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent">Regenerasi
+          Petani</span>
+      </a>
     </div>
+
+    <!-- Mobile menu button -->
+    <div class="flex-none md:hidden">
+      <button class="btn btn-ghost btn-circle" @click="mobileMenu = !mobileMenu">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transition-transform"
+          :class="mobileMenu ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Desktop menu -->
     <div class="hidden md:flex">
       <ul class="menu menu-horizontal">
         <li><a href="index.html" class="hover:text-green-600 transition-colors">Beranda</a></li>
         <li><a href="produk.html" class="hover:text-green-600 transition-colors">Produk</a></li>
-        <li><a href="peta.html" class="hover:text-green-600 transition-colors">Peta Sebaran</a></li>
-        <li class="dropdown dropdown-hover">
-          <div tabindex="0" role="button" class="hover:text-green-600 transition-colors">Layanan</div>
-          <ul tabindex="0" class="dropdown-content menu bg-white rounded-box z-[1] w-52 p-2 shadow-lg">
-            <li><a href="#konsultasi">Konsultasi</a></li>
-            <li><a href="#pelatihan">Pelatihan</a></li>
-            <li><a href="#bantuan">Bantuan Modal</a></li>
-          </ul>
-        </li>
+        <li><a class="text-green-600 font-semibold">Peta Sebaran</a></li>
         <li><a href="#kontak" class="hover:text-green-600 transition-colors">Kontak</a></li>
       </ul>
     </div>
     <div class="flex-none hidden md:block">
       <a href="login.html" class="btn btn-success btn-sm hover:scale-105 transition-transform">Masuk</a>
     </div>
+
+    <!-- Mobile menu -->
+    <div x-show="mobileMenu" x-transition class="absolute top-full left-0 w-full bg-white shadow-lg md:hidden">
+      <ul class="menu menu-vertical p-2">
+        <li><a href="index.html">Beranda</a></li>
+        <li><a href="produk.html">Produk</a></li>
+        <li><a class="text-green-600 font-semibold">Peta Sebaran</a></li>
+        <li><a href="#kontak">Kontak</a></li>
+        <li class="mt-2"><a href="login.html" class="btn btn-success btn-sm">Masuk</a></li>
+      </ul>
+    </div>
   </div>
 
-  <!-- Peta -->
-  <section class="pt-20 h-screen">
-    <div class="grid md:grid-cols-4 h-full">
-      <!-- Sidebar Filter -->
-
-      <!-- Sidebar Filter -->
-      <aside class="lg:col-span-1">
-        <div class="bg-white rounded-xl shadow-lg p-6 h-full overflow-y-auto animate-slide-in">
-          <h2 class="font-bold text-xl mb-6 flex items-center">
-            <span class="mr-2">🎛️</span> Filter Peta
-          </h2>
-
-          <!-- Search -->
-          <div class="mb-6">
-            <label class="block font-semibold mb-3 text-gray-700">Pencarian</label>
-            <div class="relative">
-              <input type="text" x-model="searchTerm" placeholder="Cari petani, daerah..."
-                class="input input-bordered w-full pl-10 pr-4" />
-              <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</div>
-            </div>
-          </div>
-
-          <!-- Dinas Teknis -->
-          <div class="mb-6">
-            <label class="block font-semibold mb-3 text-gray-700">Dinas Teknis</label>
-            <div class="space-y-2">
-              <template x-for="dinas in dinasOptions" :key="dinas.code">
-                <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                  <input type="checkbox" :value="dinas.code" x-model="selectedDinas"
-                    class="checkbox checkbox-success checkbox-sm mr-3" />
-                  <div>
-                    <div class="font-medium text-sm" x-text="dinas.name"></div>
-                    <div class="text-xs text-gray-500" x-text="dinas.count + ' petani'"></div>
-                  </div>
-                </label>
-              </template>
-            </div>
-          </div>
-
-          <!-- Status Keaktifan -->
-          <div class="mb-6">
-            <label class="block font-semibold mb-3 text-gray-700">Status Keaktifan</label>
-            <div class="space-y-2">
-              <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                <input type="checkbox" value="aktif" x-model="selectedStatus"
-                  class="checkbox checkbox-success checkbox-sm mr-3" />
-                <div class="flex items-center">
-                  <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                  <span class="text-sm">Aktif</span>
-                </div>
-              </label>
-              <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                <input type="checkbox" value="tidak-aktif" x-model="selectedStatus"
-                  class="checkbox checkbox-error checkbox-sm mr-3" />
-                <div class="flex items-center">
-                  <div class="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-                  <span class="text-sm">Tidak Aktif</span>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          <!-- Komoditas -->
-          <div class="mb-6">
-            <label class="block font-semibold mb-3 text-gray-700">Komoditas</label>
-            <select x-model="selectedCommodity" class="select select-bordered w-full select-sm">
-              <option value="">Semua Komoditas</option>
-              <template x-for="commodity in commodities" :key="commodity">
-                <option :value="commodity" x-text="commodity"></option>
-              </template>
-            </select>
-          </div>
-
-          <!-- Wilayah -->
-          <div class="mb-6">
-            <label class="block font-semibold mb-3 text-gray-700">Kabupaten/Kota</label>
-            <select x-model="selectedRegion" class="select select-bordered w-full select-sm">
-              <option value="">Semua Wilayah</option>
-              <template x-for="region in regions" :key="region">
-                <option :value="region" x-text="region"></option>
-              </template>
-            </select>
-          </div>
-
-          <!-- Layer Control -->
-          <div class="mb-6">
-            <label class="block font-semibold mb-3 text-gray-700">Layer Peta</label>
-            <div class="space-y-2">
-              <label class="flex items-center">
-                <input type="checkbox" x-model="showHeatmap" class="checkbox checkbox-sm mr-2" />
-                <span class="text-sm">Heatmap Kepadatan</span>
-              </label>
-              <label class="flex items-center">
-                <input type="checkbox" x-model="showClusters" class="checkbox checkbox-sm mr-2" />
-                <span class="text-sm">Cluster Markers</span>
-              </label>
-            </div>
-          </div>
-
-          <button @click="resetFilters()" class="btn btn-outline btn-sm w-full">
-            Reset Filter
-          </button>
+  <!-- Header Section -->
+  <section class="pt-28 pb-8 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 px-4">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-8">
+        <div
+          class="inline-block px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-medium mb-4 animate-fade-in">
+          🗺️ Visualisasi Data Realtime
         </div>
-      </aside>
+        <h1 class="text-3xl md:text-5xl font-bold text-green-900 mb-4 animate-fade-in">
+          Peta <span class="text-green-600">Sebaran Petani</span>
+        </h1>
+        <p class="text-gray-600 text-lg max-w-3xl mx-auto animate-fade-in">
+          Jelajahi distribusi petani dan komoditas unggulan di seluruh Sulawesi Tengah dengan visualisasi interaktif
+          yang
+          komprehensif
+        </p>
+      </div>
 
-
-      <!-- Peta -->
-      <div id="map" class="col-span-3 w-full h-full"></div>
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white rounded-xl p-4 shadow-lg text-center animate-slide-in">
+          <div class="text-2xl font-bold text-blue-600" x-text="stats.total"></div>
+          <div class="text-sm text-gray-600">Total Petani</div>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-lg text-center animate-slide-in" style="animation-delay: 0.1s">
+          <div class="text-2xl font-bold text-green-600" x-text="stats.active"></div>
+          <div class="text-sm text-gray-600">Petani Aktif</div>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-lg text-center animate-slide-in" style="animation-delay: 0.2s">
+          <div class="text-2xl font-bold text-purple-600" x-text="stats.commodities"></div>
+          <div class="text-sm text-gray-600">Komoditas</div>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-lg text-center animate-slide-in" style="animation-delay: 0.3s">
+          <div class="text-2xl font-bold text-orange-600" x-text="stats.regions"></div>
+          <div class="text-sm text-gray-600">Kabupaten</div>
+        </div>
+      </div>
     </div>
   </section>
 
+  <!-- Main Content -->
+  <section class="pb-8 px-4">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid lg:grid-cols-4 gap-6 h-[600px]">
+
+        <!-- Sidebar Filter -->
+        <aside class="lg:col-span-1">
+          <div class="bg-white rounded-xl shadow-lg p-6 h-full overflow-y-auto animate-slide-in">
+            <h2 class="font-bold text-xl mb-6 flex items-center">
+              <span class="mr-2">🎛️</span> Filter Peta
+            </h2>
+
+            <!-- Search -->
+            <div class="mb-6">
+              <label class="block font-semibold mb-3 text-gray-700">Pencarian</label>
+              <div class="relative">
+                <input type="text" x-model="searchTerm" placeholder="Cari petani, daerah..."
+                  class="input input-bordered w-full pl-10 pr-4" />
+                <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</div>
+              </div>
+            </div>
+
+            <!-- Dinas Teknis -->
+            <div class="mb-6">
+              <label class="block font-semibold mb-3 text-gray-700">Dinas Teknis</label>
+              <div class="space-y-2">
+                <template x-for="dinas in dinasOptions" :key="dinas.code">
+                  <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                    <input type="checkbox" :value="dinas.code" x-model="selectedDinas"
+                      class="checkbox checkbox-success checkbox-sm mr-3" />
+                    <div>
+                      <div class="font-medium text-sm" x-text="dinas.name"></div>
+                      <div class="text-xs text-gray-500" x-text="dinas.count + ' petani'"></div>
+                    </div>
+                  </label>
+                </template>
+              </div>
+            </div>
+
+            <!-- Status Keaktifan -->
+            <div class="mb-6">
+              <label class="block font-semibold mb-3 text-gray-700">Status Keaktifan</label>
+              <div class="space-y-2">
+                <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                  <input type="checkbox" value="aktif" x-model="selectedStatus"
+                    class="checkbox checkbox-success checkbox-sm mr-3" />
+                  <div class="flex items-center">
+                    <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                    <span class="text-sm">Aktif</span>
+                  </div>
+                </label>
+                <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                  <input type="checkbox" value="tidak-aktif" x-model="selectedStatus"
+                    class="checkbox checkbox-error checkbox-sm mr-3" />
+                  <div class="flex items-center">
+                    <div class="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                    <span class="text-sm">Tidak Aktif</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Komoditas -->
+            <div class="mb-6">
+              <label class="block font-semibold mb-3 text-gray-700">Komoditas</label>
+              <select x-model="selectedCommodity" class="select select-bordered w-full select-sm">
+                <option value="">Semua Komoditas</option>
+                <template x-for="commodity in commodities" :key="commodity">
+                  <option :value="commodity" x-text="commodity"></option>
+                </template>
+              </select>
+            </div>
+
+            <!-- Wilayah -->
+            <div class="mb-6">
+              <label class="block font-semibold mb-3 text-gray-700">Kabupaten/Kota</label>
+              <select x-model="selectedRegion" class="select select-bordered w-full select-sm">
+                <option value="">Semua Wilayah</option>
+                <template x-for="region in regions" :key="region">
+                  <option :value="region" x-text="region"></option>
+                </template>
+              </select>
+            </div>
+
+            <!-- Layer Control -->
+            <div class="mb-6">
+              <label class="block font-semibold mb-3 text-gray-700">Layer Peta</label>
+              <div class="space-y-2">
+                <label class="flex items-center">
+                  <input type="checkbox" x-model="showHeatmap" class="checkbox checkbox-sm mr-2" />
+                  <span class="text-sm">Heatmap Kepadatan</span>
+                </label>
+                <label class="flex items-center">
+                  <input type="checkbox" x-model="showClusters" class="checkbox checkbox-sm mr-2" />
+                  <span class="text-sm">Cluster Markers</span>
+                </label>
+              </div>
+            </div>
+
+            <button @click="resetFilters()" class="btn btn-outline btn-sm w-full">
+              Reset Filter
+            </button>
+          </div>
+        </aside>
+
+        <!-- Map Container -->
+        <div class="lg:col-span-3">
+          <div class="bg-white rounded-xl shadow-lg overflow-hidden h-full map-container animate-fade-in">
+            <!-- Map Header -->
+            <div class="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b">
+              <div class="flex justify-between items-center">
+                <div>
+                  <h3 class="font-bold text-lg text-gray-900">Peta Interaktif</h3>
+                  <p class="text-sm text-gray-600">
+                    Menampilkan <span x-text="filteredFarmers.length" class="font-semibold text-green-600"></span>
+                    petani
+                  </p>
+                </div>
+                <div class="flex space-x-2">
+                  <button @click="centerMap()" class="btn btn-ghost btn-sm" title="Kembali ke pusat">
+                    🎯
+                  </button>
+                  <button @click="toggleFullscreen()" class="btn btn-ghost btn-sm" title="Fullscreen">
+                    🔲
+                  </button>
+                  <div class="dropdown dropdown-end">
+                    <div tabindex="0" role="button" class="btn btn-ghost btn-sm">⚙️</div>
+                    <ul tabindex="0" class="dropdown-content menu bg-white rounded-box z-[1] w-52 p-2 shadow-lg">
+                      <li><a @click="exportData()">📊 Export Data</a></li>
+                      <li><a @click="shareMap()">🔗 Share Map</a></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Map -->
+            <div id="map" class="w-full flex-1" style="height: calc(100% - 80px);"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Info Cards -->
+  <section class="py-12 px-4 bg-white">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
+          <div class="text-4xl mb-4">📍</div>
+          <h3 class="font-bold text-xl mb-2">Real-time Data</h3>
+          <p class="text-gray-600">Data petani dan komoditas diperbarui secara real-time untuk akurasi maksimal</p>
+        </div>
+        <div class="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl">
+          <div class="text-4xl mb-4">🔍</div>
+          <h3 class="font-bold text-xl mb-2">Analisis Mendalam</h3>
+          <p class="text-gray-600">Fitur filter canggih untuk analisis sebaran petani berdasarkan berbagai kriteria</p>
+        </div>
+        <div class="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl">
+          <div class="text-4xl mb-4">📊</div>
+          <h3 class="font-bold text-xl mb-2">Export & Share</h3>
+          <p class="text-gray-600">Ekspor data dan bagikan peta untuk kolaborasi dan pelaporan</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-green-900 text-white px-4 py-12">
+    <div class="max-w-7xl mx-auto text-center">
+      <div class="mb-8">
+        <div class="flex items-center justify-center space-x-2 mb-4">
+          <span class="text-2xl">🌱</span>
+          <span class="font-bold text-xl">Regenerasi Petani</span>
+        </div>
+        <p class="text-green-200 max-w-2xl mx-auto">
+          Menghubungkan petani dengan teknologi modern untuk menciptakan pertanian berkelanjutan dan sejahtera.
+        </p>
+      </div>
+      <div class="border-t border-green-800 pt-8">
+        <p class="text-green-300">©2023 Pemerintah Provinsi Sulawesi Tengah. Semua hak dilindungi.</p>
+      </div>
+    </div>
+  </footer>
 
   <script>
     function mapApp() {
@@ -285,7 +417,7 @@
           },
           {
             id: 4,
-            name: 'Joko Trianto',
+            name: 'Joko tombo',
             lat: -7.3506,
             lng: 108.2186,
             dinas: 'DISBUN',

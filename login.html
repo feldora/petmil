@@ -1,39 +1,334 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - Regenerasi Petani</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" />
+  <script src="https://unpkg.com/alpinejs" defer></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          animation: {
+            'fade-in': 'fadeIn 1s ease-in-out',
+            'slide-up': 'slideUp 0.8s ease-out',
+            'float': 'float 3s ease-in-out infinite',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0px);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+  </style>
 </head>
-<body class="bg-green-50 flex items-center justify-center min-h-screen">
 
-  <div class="w-full max-w-4xl bg-white rounded-xl shadow-lg grid md:grid-cols-2">
-    <!-- Left side -->
-    <div class="hidden md:flex flex-col justify-center items-center bg-green-50 p-10 rounded-l-xl">
-      <h1 class="text-3xl font-bold text-green-800">Dashboard <br> Regenerasi Petani</h1>
-      <p class="mt-4 text-gray-600 italic">“Tinggal di Desa, Rezeki Kota, Bisnis Mendunia”</p>
+<body
+  class="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center p-4 relative overflow-hidden"
+  x-data="loginApp()">
+
+  <!-- Background decoration -->
+  <div class="absolute inset-0 overflow-hidden">
+    <div
+      class="absolute -top-40 -right-40 w-80 h-80 bg-green-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float">
     </div>
-    
-    <!-- Right side (Form) -->
-    <div class="p-8 flex flex-col justify-center">
-      <div class="flex justify-center mb-6">
-        <div class="w-16 h-16 bg-green-200 flex items-center justify-center rounded-lg">🌱</div>
-      </div>
-      <h2 class="text-2xl font-bold text-center mb-2">Selamat Datang</h2>
-      <p class="text-center text-gray-600 mb-6">Silakan masuk ke akun Regenerasi Petani Anda.</p>
+    <div
+      class="absolute -bottom-40 -left-40 w-80 h-80 bg-emerald-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float"
+      style="animation-delay: 1s;"></div>
+    <div
+      class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-teal-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float"
+      style="animation-delay: 2s;"></div>
+  </div>
 
-      <form>
-        <input type="email" placeholder="Email" class="input input-bordered w-full mb-3" required />
-        <input type="password" placeholder="Password" class="input input-bordered w-full mb-3" required />
-        <div class="flex justify-between mb-4 text-sm">
-          <a href="#" class="text-green-600 hover:underline">Lupa Kata Sandi?</a>
+  <!-- Back to Home -->
+  <div class="absolute top-4 left-4 z-50">
+    <a href="index.html" class="btn btn-ghost btn-sm glass hover:bg-white/30 transition-all duration-300">
+      ← Kembali ke Beranda
+    </a>
+  </div>
+
+  <!-- Main Container -->
+  <div
+    class="w-full max-w-6xl bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden animate-fade-in relative z-10">
+    <div class="grid lg:grid-cols-2 min-h-[600px]">
+
+      <!-- Left side - Branding -->
+      <div
+        class="hidden lg:flex flex-col justify-center items-center bg-gradient-to-br from-green-600 to-emerald-600 p-12 text-white relative overflow-hidden">
+        <!-- Background pattern -->
+        <div class="absolute inset-0 opacity-10">
+          <div class="absolute top-10 left-10 w-32 h-32 border-2 border-white rounded-full"></div>
+          <div class="absolute bottom-20 right-20 w-24 h-24 border-2 border-white rounded-full"></div>
+          <div class="absolute top-1/2 right-10 w-16 h-16 border-2 border-white rounded-full"></div>
         </div>
-        <button type="submit" class="btn btn-success w-full">Masuk</button>
-      </form>
+
+        <div class="relative z-10 text-center animate-slide-up">
+          <div class="mb-8">
+            <div
+              class="w-24 h-24 bg-white/20 rounded-3xl flex items-center justify-center text-5xl mb-6 mx-auto animate-float">
+              🌱
+            </div>
+            <h1 class="text-4xl font-bold mb-4">Regenerasi Petani</h1>
+            <div class="w-24 h-1 bg-white/50 mx-auto mb-6"></div>
+          </div>
+
+          <blockquote class="text-xl italic mb-8 leading-relaxed">
+            "Tinggal di Desa, Rezeki Kota,<br>Bisnis Mendunia"
+          </blockquote>
+
+          <div class="space-y-4 text-green-100">
+            <div class="flex items-center justify-center space-x-3">
+              <span class="text-2xl">🎯</span>
+              <span>Platform Digital Terdepan</span>
+            </div>
+            <div class="flex items-center justify-center space-x-3">
+              <span class="text-2xl">🚀</span>
+              <span>10,767+ Petani Terdaftar</span>
+            </div>
+            <div class="flex items-center justify-center space-x-3">
+              <span class="text-2xl">🌍</span>
+              <span>Jangkauan Seluruh Sulawesi Tengah</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right side - Login Form -->
+      <div class="p-8 lg:p-12 flex flex-col justify-center animate-slide-up" style="animation-delay: 0.2s;">
+
+        <!-- Mobile Branding -->
+        <div class="lg:hidden text-center mb-8">
+          <div
+            class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 animate-float">
+            🌱
+          </div>
+          <h2 class="text-2xl font-bold text-green-800">Regenerasi Petani</h2>
+        </div>
+
+        <div class="max-w-md mx-auto w-full">
+          <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Selamat Datang Kembali</h2>
+            <p class="text-gray-600">Masuk ke akun Regenerasi Petani Anda untuk melanjutkan perjalanan digital pertanian
+            </p>
+          </div>
+
+          <!-- Social Login -->
+          <div class="space-y-3 mb-6">
+            <button class="btn btn-outline w-full hover:scale-105 transition-all duration-300">
+              <span class="text-xl mr-2">🌐</span>
+              Masuk dengan Google
+            </button>
+            <button class="btn btn-outline w-full hover:scale-105 transition-all duration-300">
+              <span class="text-xl mr-2">📘</span>
+              Masuk dengan Facebook
+            </button>
+          </div>
+
+          <div class="divider text-gray-400">atau masuk dengan email</div>
+
+          <!-- Login Form -->
+          <form @submit.prevent="handleLogin()" class="space-y-6">
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium text-gray-700">Email</span>
+              </label>
+              <div class="relative">
+                <input type="email" x-model="form.email" placeholder="Masukkan email Anda"
+                  class="input input-bordered w-full pl-12 pr-4 focus:border-green-500 transition-all duration-300"
+                  :class="errors.email ? 'input-error' : ''" required />
+                <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                  ✉️
+                </div>
+              </div>
+              <div x-show="errors.email" class="label">
+                <span class="label-text-alt text-error" x-text="errors.email"></span>
+              </div>
+            </div>
+
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium text-gray-700">Password</span>
+              </label>
+              <div class="relative">
+                <input :type="showPassword ? 'text' : 'password'" x-model="form.password"
+                  placeholder="Masukkan password Anda"
+                  class="input input-bordered w-full pl-12 pr-12 focus:border-green-500 transition-all duration-300"
+                  :class="errors.password ? 'input-error' : ''" required />
+                <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                  🔒
+                </div>
+                <button type="button" @click="showPassword = !showPassword"
+                  class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                  <span x-text="showPassword ? '🙈' : '👁️'"></span>
+                </button>
+              </div>
+              <div x-show="errors.password" class="label">
+                <span class="label-text-alt text-error" x-text="errors.password"></span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <label class="label cursor-pointer">
+                <input type="checkbox" x-model="form.remember" class="checkbox checkbox-success checkbox-sm mr-2" />
+                <span class="label-text text-gray-600">Ingat saya</span>
+              </label>
+              <a href="#"
+                class="text-green-600 hover:text-green-700 text-sm font-medium hover:underline transition-colors">
+                Lupa password?
+              </a>
+            </div>
+
+            <button type="submit"
+              class="btn btn-success w-full btn-lg hover:scale-105 transition-all duration-300 shadow-lg"
+              :disabled="loading">
+              <span x-show="loading" class="loading loading-spinner loading-sm mr-2"></span>
+              <span x-text="loading ? 'Memproses...' : 'Masuk ke Akun'"></span>
+            </button>
+          </form>
+
+          <!-- Register Link -->
+          <div class="text-center mt-8 p-6 bg-gray-50 rounded-xl">
+            <p class="text-gray-600 mb-4">Belum punya akun?</p>
+            <a href="daftar.html" class="btn btn-outline btn-success hover:scale-105 transition-all duration-300">
+              Daftar Sekarang - Gratis!
+            </a>
+          </div>
+
+          <!-- Help Links -->
+          <div class="text-center mt-6 space-y-2 text-sm">
+            <div class="flex justify-center space-x-4 text-gray-500">
+              <a href="#" class="hover:text-green-600 transition-colors">Bantuan</a>
+              <span>•</span>
+              <a href="#" class="hover:text-green-600 transition-colors">Kebijakan Privasi</a>
+              <span>•</span>
+              <a href="#" class="hover:text-green-600 transition-colors">Syarat & Ketentuan</a>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
+  <!-- Success Modal -->
+  <div x-show="showSuccessModal" x-transition
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full text-center animate-slide-up">
+      <div class="text-6xl mb-4">✅</div>
+      <h3 class="text-2xl font-bold text-gray-900 mb-2">Login Berhasil!</h3>
+      <p class="text-gray-600 mb-6">Selamat datang kembali di Regenerasi Petani</p>
+      <button @click="redirectToDashboard()" class="btn btn-success btn-lg w-full">
+        Lanjut ke Dashboard
+      </button>
+    </div>
+  </div>
+
+  <script>
+    function loginApp() {
+      return {
+        form: {
+          email: '',
+          password: '',
+          remember: false
+        },
+        errors: {},
+        loading: false,
+        showPassword: false,
+        showSuccessModal: false,
+
+        async handleLogin() {
+          this.errors = {};
+          this.loading = true;
+
+          // Basic validation
+          if (!this.form.email) {
+            this.errors.email = 'Email harus diisi';
+          } else if (!this.isValidEmail(this.form.email)) {
+            this.errors.email = 'Format email tidak valid';
+          }
+
+          if (!this.form.password) {
+            this.errors.password = 'Password harus diisi';
+          } else if (this.form.password.length < 6) {
+            this.errors.password = 'Password minimal 6 karakter';
+          }
+
+          if (Object.keys(this.errors).length > 0) {
+            this.loading = false;
+            return;
+          }
+
+          // Simulate API call
+          try {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Demo credentials
+            if (this.form.email === 'demo@regenerasipetani.id' && this.form.password === '123456') {
+              this.showSuccessModal = true;
+            } else {
+              throw new Error('Email atau password salah');
+            }
+          } catch (error) {
+            this.errors.password = error.message;
+          } finally {
+            this.loading = false;
+          }
+        },
+
+        isValidEmail(email) {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          return emailRegex.test(email);
+        },
+
+        redirectToDashboard() {
+          // Simulate redirect to dashboard
+          window.location.href = 'index.html';
+        }
+      }
+    }
+  </script>
+
 </body>
+
 </html>
+'
