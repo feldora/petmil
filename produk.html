@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,80 +8,604 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" />
   <script src="https://unpkg.com/alpinejs" defer></script>
+  <style>
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in-up {
+      animation: fadeInUp 0.6s ease-out;
+    }
+  </style>
 </head>
-<body class="bg-white">
+
+<body class="bg-gray-50" x-data="productApp()">
 
   <!-- Navbar -->
   <div class="navbar bg-white shadow-md fixed top-0 w-full z-50">
     <div class="flex-1 px-2">
-      <a href="index.html" class="font-bold text-lg">🌱 Regenerasi Petani</a>
+      <a href="index.html" class="font-bold text-lg flex items-center space-x-2">
+        <span class="text-2xl">🌱</span>
+        <span class="bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent">Regenerasi
+          Petani</span>
+      </a>
     </div>
     <div class="hidden md:flex">
       <ul class="menu menu-horizontal">
-        <li><a href="index.html">Beranda</a></li>
-        <li><a class="active">Produk</a></li>
-        <li><a href="peta.html">Peta Sebaran</a></li>
-        <li><a href="#">Kontak</a></li>
+        <li><a href="index.html" class="hover:text-green-600">Beranda</a></li>
+        <li><a class="text-green-600 font-semibold">Produk</a></li>
+        <li><a href="peta.html" class="hover:text-green-600">Peta Sebaran</a></li>
+        <li><a href="#kontak" class="hover:text-green-600">Kontak</a></li>
       </ul>
     </div>
-    <div class="flex-none hidden md:block">
+    <div class="flex-none">
+      <div class="dropdown dropdown-end mr-2">
+        <div tabindex="0" role="button" class="btn btn-ghost btn-circle">
+          <div class="indicator">
+            <span class="text-xl">🛒</span>
+            <span class="badge badge-sm badge-success indicator-item" x-text="cart.length"
+              x-show="cart.length > 0"></span>
+          </div>
+        </div>
+        <div tabindex="0" class="mt-3 card card-compact dropdown-content w-80 bg-white shadow-xl z-[1]">
+          <div class="card-body">
+            <span class="font-bold text-lg">Keranjang Belanja</span>
+            <template x-for="item in cart" :key="item.id">
+              <div class="flex justify-between items-center py-2">
+                <div>
+                  <p class="font-medium" x-text="item.name"></p>
+                  <p class="text-sm text-gray-500" x-text="'Rp ' + item.price.toLocaleString()"></p>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <span x-text="item.quantity"></span>
+                  <button @click="removeFromCart(item.id)" class="btn btn-ghost btn-xs text-red-500">×</button>
+                </div>
+              </div>
+            </template>
+            <div class="card-actions" x-show="cart.length > 0">
+              <div class="w-full">
+                <div class="font-bold text-right mb-2">
+                  Total: Rp <span x-text="cartTotal.toLocaleString()"></span>
+                </div>
+                <button class="btn btn-success btn-block">Checkout</button>
+              </div>
+            </div>
+            <div x-show="cart.length === 0" class="text-center text-gray-500 py-4">
+              Keranjang kosong
+            </div>
+          </div>
+        </div>
+      </div>
       <a href="login.html" class="btn btn-success btn-sm">Masuk</a>
     </div>
   </div>
 
   <!-- Hero -->
-  <section class="pt-28 bg-green-50 text-center px-4">
-    <h1 class="text-3xl md:text-4xl font-bold text-green-900">118 Komoditas, Satu Pilihan <span class="text-green-600">Terbaik</span></h1>
-    <p class="mt-4 max-w-3xl mx-auto text-gray-600">
-      Dari ladang subur Jawa Barat, hadir produk unggulan hasil cinta dan dedikasi petani muda.
-    </p>
-    <div class="mt-6 flex justify-center">
-      <input type="text" placeholder="Cari produk..." class="input input-bordered w-64" />
-      <button class="btn btn-success ml-2">Cari</button>
-    </div>
-  </section>
+  <section class="pt-28 bg-gradient-to-br from-green-50 to-emerald-50 px-4 pb-16">
+    <div class="max-w-7xl mx-auto text-center">
+      <div class="inline-block px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-medium mb-4">
+        🏆 Produk Unggulan Nusantara
+      </div>
+      <h1 class="text-3xl md:text-5xl font-bold text-green-900 mb-4">
+        <span x-text="filteredProducts.length"></span> Komoditas, Satu Pilihan <span
+          class="text-green-600">Terbaik</span>
+      </h1>
+      <p class="mt-4 max-w-3xl mx-auto text-gray-600 text-lg leading-relaxed">
+        Dari ladang subur Jawa Barat, hadir produk unggulan hasil cinta dan dedikasi petani muda
+        yang berkomitmen pada kualitas dan keberlanjutan.
+      </p>
 
-  <!-- Filter + Produk -->
-  <section class="py-12 px-4 md:px-12">
-    <div class="grid md:grid-cols-4 gap-6">
-      <!-- Filter -->
-      <aside class="bg-white p-4 rounded-lg shadow-md">
-        <h2 class="font-bold mb-3">Filter</h2>
-        <label class="block mb-2 text-sm">Kategori</label>
-        <select class="select select-bordered w-full mb-3">
-          <option>Pangan Segar</option>
-          <option>Olahan</option>
-          <option>Obat Tradisional</option>
-        </select>
-        <button class="btn btn-success btn-sm w-full">Terapkan</button>
-      </aside>
-
-      <!-- Produk -->
-      <div class="md:col-span-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        <div class="card bg-white shadow-md">
-          <figure><img src="https://placehold.co/200x150" alt="Produk"/></figure>
-          <div class="card-body">
-            <h2 class="card-title text-sm">Sale Pisang</h2>
-            <p class="text-green-600 font-bold">Rp 10.000</p>
+      <!-- Search Bar -->
+      <div class="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4 max-w-2xl mx-auto">
+        <div class="relative flex-1 w-full">
+          <input type="text" x-model="searchTerm" placeholder="Cari produk (contoh: kopi, sale pisang, teh)"
+            class="input input-bordered w-full pl-12 pr-4 py-3 text-lg" />
+          <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+            🔍
           </div>
         </div>
-        <div class="card bg-white shadow-md">
-          <figure><img src="https://placehold.co/200x150" alt="Produk"/></figure>
-          <div class="card-body">
-            <h2 class="card-title text-sm">Kopi Arabica</h2>
-            <p class="text-green-600 font-bold">Rp 38.000</p>
-          </div>
-        </div>
-        <!-- Tambahkan produk lainnya -->
+        <button class="btn btn-success btn-lg px-8">
+          <span>Cari Produk</span>
+        </button>
       </div>
     </div>
   </section>
 
+  <!-- Filter + Produk -->
+  <section class="py-12 px-4">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid lg:grid-cols-4 gap-8">
+
+        <!-- Filter Sidebar -->
+        <aside class="lg:col-span-1">
+          <div class="bg-white rounded-xl shadow-lg p-6 sticky top-24">
+            <h2 class="font-bold text-xl mb-6 flex items-center">
+              <span class="mr-2">🎛️</span> Filter Produk
+            </h2>
+
+            <!-- Kategori -->
+            <div class="mb-6">
+              <label class="block font-semibold mb-3 text-gray-700">Kategori</label>
+              <div class="space-y-2">
+                <template x-for="category in categories" :key="category">
+                  <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                    <input type="checkbox" :value="category" x-model="selectedCategories"
+                      class="checkbox checkbox-success checkbox-sm mr-3" />
+                    <span x-text="category" class="text-sm"></span>
+                  </label>
+                </template>
+              </div>
+            </div>
+
+            <!-- Range Harga -->
+            <div class="mb-6">
+              <label class="block font-semibold mb-3 text-gray-700">Range Harga</label>
+              <div class="space-y-3">
+                <div class="flex items-center space-x-2">
+                  <input type="number" x-model="priceRange.min" placeholder="Min"
+                    class="input input-sm input-bordered flex-1" />
+                  <span>-</span>
+                  <input type="number" x-model="priceRange.max" placeholder="Max"
+                    class="input input-sm input-bordered flex-1" />
+                </div>
+                <div class="text-xs text-gray-500">
+                  Harga: Rp <span x-text="(priceRange.min || 0).toLocaleString()"></span> -
+                  Rp <span x-text="(priceRange.max || 1000000).toLocaleString()"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Lokasi -->
+            <div class="mb-6">
+              <label class="block font-semibold mb-3 text-gray-700">Daerah Asal</label>
+              <select x-model="selectedLocation" class="select select-bordered w-full select-sm">
+                <option value="">Semua Daerah</option>
+                <option value="Bandung">Bandung</option>
+                <option value="Subang">Subang</option>
+                <option value="Karawang">Karawang</option>
+                <option value="Garut">Garut</option>
+                <option value="Tasikmalaya">Tasikmalaya</option>
+              </select>
+            </div>
+
+            <!-- Rating -->
+            <div class="mb-6">
+              <label class="block font-semibold mb-3 text-gray-700">Rating Minimum</label>
+              <div class="flex space-x-1">
+                <template x-for="i in 5" :key="i">
+                  <button @click="selectedRating = i" class="text-2xl transition-colors"
+                    :class="i <= selectedRating ? 'text-yellow-400' : 'text-gray-300'">★</button>
+                </template>
+              </div>
+            </div>
+
+            <button @click="clearFilters()" class="btn btn-outline btn-sm w-full">
+              Reset Filter
+            </button>
+          </div>
+        </aside>
+
+        <!-- Produk Grid -->
+        <div class="lg:col-span-3">
+          <!-- Sort dan View Options -->
+          <div
+            class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 bg-white rounded-xl p-4 shadow-lg">
+            <div class="mb-4 sm:mb-0">
+              <p class="text-gray-600">
+                Menampilkan <span class="font-semibold" x-text="filteredProducts.length"></span> dari
+                <span class="font-semibold" x-text="products.length"></span> produk
+              </p>
+            </div>
+            <div class="flex items-center space-x-4">
+              <select x-model="sortBy" class="select select-bordered select-sm">
+                <option value="name">Urutkan: A-Z</option>
+                <option value="price-low">Harga: Rendah-Tinggi</option>
+                <option value="price-high">Harga: Tinggi-Rendah</option>
+                <option value="rating">Rating Tertinggi</option>
+                <option value="newest">Terbaru</option>
+              </select>
+              <div class="flex space-x-1">
+                <button @click="viewMode = 'grid'" :class="viewMode === 'grid' ? 'btn-success' : 'btn-outline'"
+                  class="btn btn-sm">⊞</button>
+                <button @click="viewMode = 'list'" :class="viewMode === 'list' ? 'btn-success' : 'btn-outline'"
+                  class="btn btn-sm">☰</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Products Grid/List -->
+          <div class="grid gap-6 fade-in-up"
+            :class="viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'">
+            <template x-for="product in paginatedProducts" :key="product.id">
+              <div
+                class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
+                :class="viewMode === 'list' ? 'flex' : ''">
+                <div :class="viewMode === 'list' ? 'w-48 h-48' : 'aspect-square'">
+                  <img :src="product.image" :alt="product.name" class="w-full h-full object-cover" />
+                </div>
+
+                <div class="p-6 flex-1">
+                  <div class="flex justify-between items-start mb-2">
+                    <h3 class="font-bold text-lg text-gray-900" x-text="product.name"></h3>
+                    <button @click="toggleWishlist(product.id)"
+                      class="text-red-400 hover:text-red-500 text-xl transition-colors"
+                      :class="isInWishlist(product.id) ? 'text-red-500' : 'text-gray-300'">♥</button>
+                  </div>
+
+                  <div class="flex items-center mb-2">
+                    <div class="flex text-yellow-400 text-sm mr-2">
+                      <template x-for="i in 5" :key="i">
+                        <span :class="i <= product.rating ? 'text-yellow-400' : 'text-gray-300'">★</span>
+                      </template>
+                    </div>
+                    <span class="text-sm text-gray-600">(<span x-text="product.reviews"></span> ulasan)</span>
+                  </div>
+
+                  <p class="text-gray-600 text-sm mb-3" x-text="product.description"></p>
+
+                  <div class="flex items-center text-sm text-gray-500 mb-4">
+                    <span class="mr-4">📍 <span x-text="product.location"></span></span>
+                    <span>👤 <span x-text="product.farmer"></span></span>
+                  </div>
+
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <span class="text-2xl font-bold text-green-600">
+                        Rp <span x-text="product.price.toLocaleString()"></span>
+                      </span>
+                      <span class="text-sm text-gray-500">/<span x-text="product.unit"></span></span>
+                    </div>
+                    <div class="flex space-x-2">
+                      <button @click="showProductDetail(product)"
+                        class="btn btn-outline btn-sm hover:scale-105 transition-transform">
+                        👁️ Detail
+                      </button>
+                      <button @click="addToCart(product)"
+                        class="btn btn-success btn-sm hover:scale-105 transition-transform">
+                        🛒 Beli
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <!-- Pagination -->
+          <div class="flex justify-center mt-12" x-show="totalPages > 1">
+            <div class="join">
+              <button @click="currentPage = Math.max(1, currentPage - 1)" class="join-item btn"
+                :disabled="currentPage === 1">«</button>
+
+              <template x-for="page in visiblePages" :key="page">
+                <button @click="currentPage = page" class="join-item btn"
+                  :class="currentPage === page ? 'btn-success' : ''" x-text="page"></button>
+              </template>
+
+              <button @click="currentPage = Math.min(totalPages, currentPage + 1)" class="join-item btn"
+                :disabled="currentPage === totalPages">»</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Product Detail Modal -->
+  <div x-show="selectedProduct" x-transition
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="p-6">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold" x-text="selectedProduct?.name"></h2>
+          <button @click="selectedProduct = null" class="btn btn-ghost btn-circle">✕</button>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8" x-show="selectedProduct">
+          <div>
+            <img :src="selectedProduct?.image" :alt="selectedProduct?.name"
+              class="w-full aspect-square object-cover rounded-xl" />
+          </div>
+
+          <div>
+            <div class="flex items-center mb-4">
+              <div class="flex text-yellow-400 text-lg mr-3">
+                <template x-for="i in 5" :key="i">
+                  <span :class="i <= selectedProduct?.rating ? 'text-yellow-400' : 'text-gray-300'">★</span>
+                </template>
+              </div>
+              <span class="text-gray-600">(<span x-text="selectedProduct?.reviews"></span> ulasan)</span>
+            </div>
+
+            <p class="text-gray-700 mb-6" x-text="selectedProduct?.description"></p>
+
+            <div class="space-y-4 mb-6">
+              <div class="flex justify-between">
+                <span class="text-gray-600">Petani:</span>
+                <span class="font-semibold" x-text="selectedProduct?.farmer"></span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">Lokasi:</span>
+                <span class="font-semibold" x-text="selectedProduct?.location"></span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">Kategori:</span>
+                <span class="font-semibold" x-text="selectedProduct?.category"></span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">Stok:</span>
+                <span class="font-semibold text-green-600"
+                  x-text="selectedProduct?.stock + ' ' + selectedProduct?.unit"></span>
+              </div>
+            </div>
+
+            <div class="bg-green-50 p-4 rounded-xl mb-6">
+              <div class="text-3xl font-bold text-green-600 mb-2">
+                Rp <span x-text="selectedProduct?.price?.toLocaleString()"></span>
+                <span class="text-sm font-normal text-gray-600">/<span x-text="selectedProduct?.unit"></span></span>
+              </div>
+            </div>
+
+            <div class="flex space-x-4">
+              <button @click="addToCart(selectedProduct); selectedProduct = null" class="btn btn-success flex-1 btn-lg">
+                🛒 Tambah ke Keranjang
+              </button>
+              <button @click="toggleWishlist(selectedProduct?.id)" class="btn btn-outline btn-lg"
+                :class="isInWishlist(selectedProduct?.id) ? 'text-red-500 border-red-500' : ''">
+                ♥
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer -->
-  <footer class="footer p-6 md:p-10 bg-green-900 text-white text-sm">
-    <aside>
-      <p>©2023 Pemerintah Provinsi Jawa Barat <br>Jl. Diponegoro No.22, Bandung</p>
-    </aside>
+  <footer class="bg-green-900 text-white px-4 py-12 mt-20">
+    <div class="max-w-7xl mx-auto text-center">
+      <div class="mb-8">
+        <div class="flex items-center justify-center space-x-2 mb-4">
+          <span class="text-2xl">🌱</span>
+          <span class="font-bold text-xl">Regenerasi Petani</span>
+        </div>
+        <p class="text-green-200 max-w-2xl mx-auto">
+          Menghubungkan petani dengan teknologi modern untuk menciptakan pertanian berkelanjutan dan sejahtera.
+        </p>
+      </div>
+      <div class="border-t border-green-800 pt-8">
+        <p class="text-green-300">©2023 Pemerintah Provinsi Jawa Barat. Semua hak dilindungi.</p>
+      </div>
+    </div>
   </footer>
+
+  <script>
+    function productApp() {
+      return {
+        products: [
+          {
+            id: 1,
+            name: "Sale Pisang Premium",
+            price: 15000,
+            image: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?ixlib=rb-4.0.3&w=400&h=400&fit=crop",
+            category: "Olahan",
+            description: "Sale pisang renyah dengan cita rasa manis alami, dibuat dari pisang pilihan petani lokal",
+            location: "Subang",
+            farmer: "Budi Santoso",
+            rating: 4.8,
+            reviews: 127,
+            unit: "pack",
+            stock: 50
+          },
+          {
+            id: 2,
+            name: "Kopi Arabica Gayo",
+            price: 85000,
+            image: "https://images.unsplash.com/photo-1447933601403-0c6688de566e?ixlib=rb-4.0.3&w=400&h=400&fit=crop",
+            category: "Pangan Segar",
+            description: "Kopi arabica premium dari dataran tinggi Gayo dengan aroma dan rasa yang khas",
+            location: "Garut",
+            farmer: "Ahmad Rizky",
+            rating: 4.9,
+            reviews: 89,
+            unit: "kg",
+            stock: 25
+          },
+          {
+            id: 3,
+            name: "Teh Hijau Organik",
+            price: 45000,
+            image: "https://images.unsplash.com/photo-1556881284-84c1858c2511?ixlib=rb-4.0.3&w=400&h=400&fit=crop",
+            category: "Pangan Segar",
+            description: "Teh hijau organik berkualitas tinggi, kaya antioksidan dan bebas pestisida",
+            location: "Bandung",
+            farmer: "Sari Dewi",
+            rating: 4.7,
+            reviews: 156,
+            unit: "pack",
+            stock: 75
+          },
+          {
+            id: 4,
+            name: "Madu Hutan Asli",
+            price: 120000,
+            image: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?ixlib=rb-4.0.3&w=400&h=400&fit=crop",
+            category: "Obat Tradisional",
+            description: "Madu murni dari hutan yang dipanen secara tradisional, kaya manfaat kesehatan",
+            location: "Tasikmalaya",
+            farmer: "Joko Widodo",
+            rating: 4.9,
+            reviews: 203,
+            unit: "botol",
+            stock: 30
+          },
+          {
+            id: 5,
+            name: "Beras Merah Organik",
+            price: 18000,
+            image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?ixlib=rb-4.0.3&w=400&h=400&fit=crop",
+            category: "Pangan Segar",
+            description: "Beras merah organik bergizi tinggi, ditanam tanpa pestisida kimia",
+            location: "Karawang",
+            farmer: "Rina Sari",
+            rating: 4.6,
+            reviews: 98,
+            unit: "kg",
+            stock: 100
+          },
+          {
+            id: 6,
+            name: "Keripik Singkong",
+            price: 25000,
+            image: "https://images.unsplash.com/photo-1621939514649-280e2ee25f60?ixlib=rb-4.0.3&w=400&h=400&fit=crop",
+            category: "Olahan",
+            description: "Keripik singkong renyah dengan berbagai varian rasa, camilan sehat keluarga",
+            location: "Bandung",
+            farmer: "Dedi Mulyadi",
+            rating: 4.5,
+            reviews: 142,
+            unit: "pack",
+            stock: 85
+          }
+        ],
+
+        searchTerm: '',
+        selectedCategories: [],
+        selectedLocation: '',
+        selectedRating: 0,
+        priceRange: { min: null, max: null },
+        sortBy: 'name',
+        viewMode: 'grid',
+        currentPage: 1,
+        itemsPerPage: 6,
+
+        selectedProduct: null,
+        cart: [],
+        wishlist: [],
+
+        get categories() {
+          return [...new Set(this.products.map(p => p.category))];
+        },
+
+        get filteredProducts() {
+          let filtered = this.products.filter(product => {
+            const matchesSearch = product.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+              product.description.toLowerCase().includes(this.searchTerm.toLowerCase());
+
+            const matchesCategory = this.selectedCategories.length === 0 ||
+              this.selectedCategories.includes(product.category);
+
+            const matchesLocation = !this.selectedLocation || product.location === this.selectedLocation;
+
+            const matchesRating = product.rating >= this.selectedRating;
+
+            const matchesPrice = (!this.priceRange.min || product.price >= this.priceRange.min) &&
+              (!this.priceRange.max || product.price <= this.priceRange.max);
+
+            return matchesSearch && matchesCategory && matchesLocation && matchesRating && matchesPrice;
+          });
+
+          // Sort products
+          switch (this.sortBy) {
+            case 'price-low':
+              filtered.sort((a, b) => a.price - b.price);
+              break;
+            case 'price-high':
+              filtered.sort((a, b) => b.price - a.price);
+              break;
+            case 'rating':
+              filtered.sort((a, b) => b.rating - a.rating);
+              break;
+            case 'newest':
+              filtered.sort((a, b) => b.id - a.id);
+              break;
+            default:
+              filtered.sort((a, b) => a.name.localeCompare(b.name));
+          }
+
+          return filtered;
+        },
+
+        get paginatedProducts() {
+          const start = (this.currentPage - 1) * this.itemsPerPage;
+          const end = start + this.itemsPerPage;
+          return this.filteredProducts.slice(start, end);
+        },
+
+        get totalPages() {
+          return Math.ceil(this.filteredProducts.length / this.itemsPerPage);
+        },
+
+        get visiblePages() {
+          const pages = [];
+          const maxVisible = 5;
+          let start = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
+          let end = Math.min(this.totalPages, start + maxVisible - 1);
+
+          if (end - start + 1 < maxVisible) {
+            start = Math.max(1, end - maxVisible + 1);
+          }
+
+          for (let i = start; i <= end; i++) {
+            pages.push(i);
+          }
+          return pages;
+        },
+
+        get cartTotal() {
+          return this.cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+        },
+
+        addToCart(product) {
+          const existingItem = this.cart.find(item => item.id === product.id);
+          if (existingItem) {
+            existingItem.quantity += 1;
+          } else {
+            this.cart.push({ ...product, quantity: 1 });
+          }
+        },
+
+        removeFromCart(productId) {
+          this.cart = this.cart.filter(item => item.id !== productId);
+        },
+
+        toggleWishlist(productId) {
+          const index = this.wishlist.indexOf(productId);
+          if (index > -1) {
+            this.wishlist.splice(index, 1);
+          } else {
+            this.wishlist.push(productId);
+          }
+        },
+
+        isInWishlist(productId) {
+          return this.wishlist.includes(productId);
+        },
+
+        showProductDetail(product) {
+          this.selectedProduct = product;
+        },
+
+        clearFilters() {
+          this.searchTerm = '';
+          this.selectedCategories = [];
+          this.selectedLocation = '';
+          this.selectedRating = 0;
+          this.priceRange = { min: null, max: null };
+          this.currentPage = 1;
+        }
+      }
+    }
+  </script>
+
 </body>
+
 </html>

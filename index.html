@@ -8,95 +8,451 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" />
   <script src="https://unpkg.com/alpinejs" defer></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          animation: {
+            'float': 'float 3s ease-in-out infinite',
+            'fade-in': 'fadeIn 1s ease-in-out',
+            'slide-up': 'slideUp 0.8s ease-out',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0px);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+  </style>
 </head>
 
-<body class="bg-white">
+<body class="bg-white" x-data="{ mobileMenu: false, scrollY: 0 }"
+  x-init="window.addEventListener('scroll', () => scrollY = window.scrollY)">
 
   <!-- Navbar -->
-  <div class="navbar bg-white shadow-md fixed top-0 w-full z-50">
+  <div class="navbar transition-all duration-300"
+    :class="scrollY > 50 ? 'bg-white/90 backdrop-blur-md shadow-lg' : 'bg-white shadow-md'"
+    class="fixed top-0 w-full z-50">
     <div class="flex-1 px-2">
-      <a href="index.html" class="font-bold text-lg">🌱 Regenerasi Petani</a>
+      <a href="index.html" class="font-bold text-lg flex items-center space-x-2">
+        <span class="text-2xl animate-float">🌱</span>
+        <span class="bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent">Regenerasi
+          Petani</span>
+      </a>
     </div>
+
     <!-- Mobile menu button -->
     <div class="flex-none md:hidden">
-      <button class="btn btn-ghost btn-circle" @click="open = !open" x-data="{open:false}">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <button class="btn btn-ghost btn-circle" @click="mobileMenu = !mobileMenu">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transition-transform"
+          :class="mobileMenu ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
     </div>
+
     <!-- Desktop menu -->
     <div class="hidden md:flex">
       <ul class="menu menu-horizontal">
-        <li><a href="index.html">Beranda</a></li>
-        <li><a href="produk.html">Produk</a></li>
-        <li><a href="peta.html">Peta Sebaran</a></li>
-        <li><a href="#">Kontak</a></li>
+        <li><a href="index.html" class="hover:text-green-600 transition-colors">Beranda</a></li>
+        <li><a href="produk.html" class="hover:text-green-600 transition-colors">Produk</a></li>
+        <li><a href="peta.html" class="hover:text-green-600 transition-colors">Peta Sebaran</a></li>
+        <li class="dropdown dropdown-hover">
+          <div tabindex="0" role="button" class="hover:text-green-600 transition-colors">Layanan</div>
+          <ul tabindex="0" class="dropdown-content menu bg-white rounded-box z-[1] w-52 p-2 shadow-lg">
+            <li><a href="#konsultasi">Konsultasi</a></li>
+            <li><a href="#pelatihan">Pelatihan</a></li>
+            <li><a href="#bantuan">Bantuan Modal</a></li>
+          </ul>
+        </li>
+        <li><a href="#kontak" class="hover:text-green-600 transition-colors">Kontak</a></li>
       </ul>
     </div>
     <div class="flex-none hidden md:block">
-      <a href="login.html" class="btn btn-success btn-sm">Masuk</a>
+      <a href="login.html" class="btn btn-success btn-sm hover:scale-105 transition-transform">Masuk</a>
+    </div>
+
+    <!-- Mobile menu -->
+    <div x-show="mobileMenu" x-transition class="absolute top-full left-0 w-full bg-white shadow-lg md:hidden">
+      <ul class="menu menu-vertical p-2">
+        <li><a href="index.html">Beranda</a></li>
+        <li><a href="produk.html">Produk</a></li>
+        <li><a href="peta.html">Peta Sebaran</a></li>
+        <li><a href="#konsultasi">Konsultasi</a></li>
+        <li><a href="#kontak">Kontak</a></li>
+        <li class="mt-2"><a href="login.html" class="btn btn-success btn-sm">Masuk</a></li>
+      </ul>
     </div>
   </div>
 
   <!-- Hero Section -->
-  <section class="pt-28 bg-green-50 px-4">
-    <div class="text-center md:grid md:grid-cols-2 md:gap-8 md:text-left md:items-center md:px-16">
-      <div>
-        <h1 class="text-3xl md:text-5xl font-bold text-green-900 leading-snug">
-          Jadilah penentu kemajuan pertanian masa depan
+  <section class="pt-28 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 px-4 pb-16 relative overflow-hidden">
+    <!-- Background decoration -->
+    <div class="absolute inset-0 opacity-5">
+      <div class="absolute top-20 left-10 w-64 h-64 bg-green-400 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-20 right-10 w-96 h-96 bg-emerald-400 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="text-center md:grid md:grid-cols-2 md:gap-8 md:text-left md:items-center md:px-16 relative z-10">
+      <div class="animate-fade-in">
+        <div class="inline-block px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-medium mb-4">
+          🎯 Platform Digital Terdepan
+        </div>
+        <h1 class="text-3xl md:text-6xl font-bold text-green-900 leading-tight">
+          Jadilah <span
+            class="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">penentu</span> kemajuan
+          pertanian masa depan
         </h1>
-        <p class="mt-4 text-gray-600 text-base md:text-lg">
-          Melalui inovasi dan pemanfaatan teknologi digital.
+        <p class="mt-6 text-gray-600 text-base md:text-xl leading-relaxed">
+          Melalui inovasi teknologi digital, kami menghubungkan petani muda dengan peluang global,
+          menciptakan ekosistem pertanian berkelanjutan untuk Indonesia yang lebih hijau.
         </p>
-        <div class="mt-6">
-          <a href="produk.html" class="btn btn-success">Lihat Produk</a>
+        <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+          <a href="produk.html" class="btn btn-success btn-lg hover:scale-105 transition-all duration-300 shadow-lg">
+            🛒 Lihat Produk
+          </a>
+          <button class="btn btn-outline btn-lg hover:scale-105 transition-all duration-300"
+            onclick="document.getElementById('video-modal').showModal()">
+            ▶️ Tonton Video
+          </button>
         </div>
       </div>
-      <div class="mt-8 md:mt-0">
-        <img src="https://placehold.co/500x300" class="rounded-xl shadow-md w-full" />
+      <div class="mt-12 md:mt-0 animate-slide-up">
+        <div class="relative">
+          <img
+            src="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
+            class="rounded-2xl shadow-2xl w-full animate-float" alt="Petani Modern" />
+          <div class="absolute -bottom-6 -right-6 bg-white rounded-xl p-4 shadow-lg">
+            <div class="flex items-center space-x-2">
+              <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <span class="text-sm font-medium">10,767 Petani Aktif</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- Statistik -->
-  <section class="py-12 bg-white px-4">
-    <div class="grid grid-cols-2 gap-6 text-center md:grid-cols-4 max-w-6xl mx-auto">
-      <div>
-        <p class="text-gray-500 text-sm">Inovasi Petani</p>
-        <p class="text-2xl font-bold text-green-600">5336</p>
+  <section class="py-20 bg-white px-4 relative">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Dampak <span class="text-green-600">Nyata</span> yang Terukur
+        </h2>
+        <p class="text-gray-600 text-lg max-w-2xl mx-auto">
+          Melihat pencapaian luar biasa dari komunitas petani Indonesia
+        </p>
       </div>
-      <div>
-        <p class="text-gray-500 text-sm">Petani Aktif</p>
-        <p class="text-2xl font-bold text-green-600">10767</p>
-      </div>
-      <div>
-        <p class="text-gray-500 text-sm">Pendaftar 2023</p>
-        <p class="text-2xl font-bold text-green-600">10037</p>
-      </div>
-      <div>
-        <p class="text-gray-500 text-sm">Komoditas</p>
-        <p class="text-2xl font-bold text-green-600">125</p>
+
+      <div class="grid grid-cols-2 gap-8 md:grid-cols-4 lg:gap-12" x-data="{ 
+        stats: [
+          { label: 'Inovasi Petani', value: 5336, prefix: '', suffix: '+' },
+          { label: 'Petani Aktif', value: 10767, prefix: '', suffix: '' },
+          { label: 'Pendaftar 2023', value: 10037, prefix: '', suffix: '' },
+          { label: 'Komoditas', value: 125, prefix: '', suffix: ' Jenis' }
+        ]
+      }">
+        <template x-for="(stat, index) in stats" :key="index">
+          <div class="text-center group hover:scale-105 transition-all duration-300 cursor-pointer">
+            <div
+              class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 group-hover:shadow-lg transition-shadow">
+              <div class="text-3xl md:text-4xl lg:text-5xl font-bold text-green-600 mb-2"
+                x-text="stat.prefix + stat.value.toLocaleString() + stat.suffix">
+              </div>
+              <p class="text-gray-600 text-sm md:text-base font-medium" x-text="stat.label"></p>
+              <div class="w-full bg-gray-200 rounded-full h-1 mt-3">
+                <div
+                  class="bg-gradient-to-r from-green-400 to-emerald-500 h-1 rounded-full transition-all duration-1000"
+                  :style="`width: ${Math.min(100, (stat.value / 12000) * 100)}%`"></div>
+              </div>
+            </div>
+          </div>
+        </template>
       </div>
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer class="footer p-6 md:p-10 bg-green-900 text-white text-sm">
-    <aside>
-      <p>
-        ©2023 Pemerintah Provinsi Jawa Barat <br>
-        Jl. Diponegoro No.22, Bandung
-      </p>
-    </aside>
-    <nav>
-      <h6 class="footer-title">Ikuti Kami</h6>
-      <div class="grid grid-flow-col gap-4">
-        <a>🌐</a>
-        <a>📘</a>
-        <a>📸</a>
+  <!-- Fitur Unggulan -->
+  <section class="py-20 bg-gradient-to-br from-gray-50 to-green-50 px-4">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Mengapa <span class="text-green-600">Regenerasi Petani?</span>
+        </h2>
+        <p class="text-gray-600 text-lg max-w-3xl mx-auto">
+          Platform lengkap yang mengintegrasikan teknologi modern dengan kearifan lokal untuk menciptakan pertanian
+          berkelanjutan
+        </p>
       </div>
-    </nav>
+
+      <div class="grid md:grid-cols-3 gap-8" x-data="{ hoveredCard: null }">
+        <!-- Fitur 1 -->
+        <div
+          class="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
+          @mouseenter="hoveredCard = 1" @mouseleave="hoveredCard = null">
+          <div
+            class="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mb-6">
+            <span class="text-3xl">🎯</span>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-4">Pemasaran Digital</h3>
+          <p class="text-gray-600 mb-6">
+            Jangkau pasar yang lebih luas dengan platform e-commerce terintegrasi dan sistem pembayaran digital yang
+            aman.
+          </p>
+          <div class="flex items-center text-blue-600 font-medium">
+            <span>Pelajari lebih lanjut</span>
+            <svg class="w-4 h-4 ml-2 transition-transform" :class="hoveredCard === 1 ? 'translate-x-1' : ''" fill="none"
+              stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Fitur 2 -->
+        <div
+          class="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
+          @mouseenter="hoveredCard = 2" @mouseleave="hoveredCard = null">
+          <div
+            class="w-16 h-16 bg-gradient-to-br from-green-100 to-green-200 rounded-2xl flex items-center justify-center mb-6">
+            <span class="text-3xl">📚</span>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-4">Edukasi & Pelatihan</h3>
+          <p class="text-gray-600 mb-6">
+            Program pelatihan komprehensif dari teknik bertani modern hingga manajemen bisnis dan teknologi pertanian.
+          </p>
+          <div class="flex items-center text-green-600 font-medium">
+            <span>Mulai belajar</span>
+            <svg class="w-4 h-4 ml-2 transition-transform" :class="hoveredCard === 2 ? 'translate-x-1' : ''" fill="none"
+              stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Fitur 3 -->
+        <div
+          class="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
+          @mouseenter="hoveredCard = 3" @mouseleave="hoveredCard = null">
+          <div
+            class="w-16 h-16 bg-gradient-to-br from-purple-100 to-purple-200 rounded-2xl flex items-center justify-center mb-6">
+            <span class="text-3xl">💰</span>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-4">Akses Permodalan</h3>
+          <p class="text-gray-600 mb-6">
+            Dapatkan akses mudah ke berbagai skema pembiayaan dan bantuan modal untuk mengembangkan usaha pertanian
+            Anda.
+          </p>
+          <div class="flex items-center text-purple-600 font-medium">
+            <span>Ajukan sekarang</span>
+            <svg class="w-4 h-4 ml-2 transition-transform" :class="hoveredCard === 3 ? 'translate-x-1' : ''" fill="none"
+              stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimoni -->
+  <section class="py-20 bg-white px-4">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Cerita <span class="text-green-600">Sukses</span> Petani
+        </h2>
+        <p class="text-gray-600 text-lg">Inspirasi dari para petani yang telah merasakan manfaat platform kami</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8" x-data="{ activeTestimonial: 0 }">
+        <!-- Testimoni 1 -->
+        <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-8 relative">
+          <div class="flex items-center mb-6">
+            <img
+              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&w=150&h=150&fit=crop&crop=face"
+              class="w-16 h-16 rounded-full object-cover" alt="Budi Santoso">
+            <div class="ml-4">
+              <h4 class="font-bold text-gray-900">Budi Santoso</h4>
+              <p class="text-gray-600 text-sm">Petani Padi, Karawang</p>
+              <div class="flex text-yellow-400 text-sm">★★★★★</div>
+            </div>
+          </div>
+          <p class="text-gray-700 italic leading-relaxed">
+            "Berkat platform ini, hasil panen saya bisa langsung terjual dengan harga yang adil.
+            Sekarang saya tidak perlu khawatir lagi tentang pemasaran hasil pertanian."
+          </p>
+          <div class="absolute top-6 right-6 text-green-200 text-6xl">"</div>
+        </div>
+
+        <!-- Testimoni 2 -->
+        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 relative">
+          <div class="flex items-center mb-6">
+            <img
+              src="https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&w=150&h=150&fit=crop&crop=face"
+              class="w-16 h-16 rounded-full object-cover" alt="Sari Dewi">
+            <div class="ml-4">
+              <h4 class="font-bold text-gray-900">Sari Dewi</h4>
+              <p class="text-gray-600 text-sm">Petani Organik, Bandung</p>
+              <div class="flex text-yellow-400 text-sm">★★★★★</div>
+            </div>
+          </div>
+          <p class="text-gray-700 italic leading-relaxed">
+            "Program pelatihan yang diberikan sangat membantu saya memahami teknik bertani organik.
+            Sekarang produk saya diminati pasar premium."
+          </p>
+          <div class="absolute top-6 right-6 text-blue-200 text-6xl">"</div>
+        </div>
+
+        <!-- Testimoni 3 -->
+        <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 relative">
+          <div class="flex items-center mb-6">
+            <img
+              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&w=150&h=150&fit=crop&crop=face"
+              class="w-16 h-16 rounded-full object-cover" alt="Ahmad Rizky">
+            <div class="ml-4">
+              <h4 class="font-bold text-gray-900">Ahmad Rizky</h4>
+              <p class="text-gray-600 text-sm">Petani Milenial, Subang</p>
+              <div class="flex text-yellow-400 text-sm">★★★★★</div>
+            </div>
+          </div>
+          <p class="text-gray-700 italic leading-relaxed">
+            "Akses modal yang mudah membuat saya bisa mengembangkan usaha hidroponik.
+            Omzet sekarang meningkat 300% dari sebelumnya!"
+          </p>
+          <div class="absolute top-6 right-6 text-purple-200 text-6xl">"</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-20 bg-gradient-to-r from-green-600 to-emerald-600 px-4 text-white relative overflow-hidden">
+    <div class="absolute inset-0 bg-black opacity-10"></div>
+    <div class="max-w-4xl mx-auto text-center relative z-10">
+      <h2 class="text-3xl md:text-5xl font-bold mb-6">
+        Mulai Perjalanan Anda Hari Ini
+      </h2>
+      <p class="text-xl mb-8 text-green-100 leading-relaxed">
+        Bergabunglah dengan ribuan petani yang telah merasakan transformasi digital dalam pertanian
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="login.html" class="btn btn-white btn-lg hover:scale-105 transition-all duration-300 shadow-xl">
+          🚀 Daftar Sekarang
+        </a>
+        <a href="#kontak"
+          class="btn btn-outline btn-lg text-white border-white hover:bg-white hover:text-green-600 hover:scale-105 transition-all duration-300">
+          📞 Hubungi Kami
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Modal Video -->
+  <dialog id="video-modal" class="modal">
+    <div class="modal-box w-11/12 max-w-4xl">
+      <h3 class="font-bold text-lg mb-4">Tentang Regenerasi Petani</h3>
+      <div class="aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
+        <div class="text-center">
+          <div class="text-6xl mb-4">📹</div>
+          <p class="text-gray-600">Video akan dimuat di sini</p>
+        </div>
+      </div>
+      <div class="modal-action">
+        <form method="dialog">
+          <button class="btn">Tutup</button>
+        </form>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Footer -->
+  <footer class="bg-green-900 text-white px-4 py-12">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid md:grid-cols-4 gap-8 mb-8">
+        <div>
+          <div class="flex items-center space-x-2 mb-4">
+            <span class="text-2xl">🌱</span>
+            <span class="font-bold text-xl">Regenerasi Petani</span>
+          </div>
+          <p class="text-green-200 mb-4">
+            Platform digital yang menghubungkan petani dengan teknologi modern untuk menciptakan pertanian
+            berkelanjutan.
+          </p>
+          <div class="flex space-x-4">
+            <a href="#" class="text-2xl hover:text-green-300 transition-colors">🌐</a>
+            <a href="#" class="text-2xl hover:text-green-300 transition-colors">📘</a>
+            <a href="#" class="text-2xl hover:text-green-300 transition-colors">📸</a>
+            <a href="#" class="text-2xl hover:text-green-300 transition-colors">🐦</a>
+          </div>
+        </div>
+
+        <div>
+          <h6 class="font-bold text-lg mb-4">Layanan</h6>
+          <ul class="space-y-2 text-green-200">
+            <li><a href="#" class="hover:text-white transition-colors">Pemasaran Produk</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Konsultasi Pertanian</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Pelatihan Online</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Bantuan Modal</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h6 class="font-bold text-lg mb-4">Dukungan</h6>
+          <ul class="space-y-2 text-green-200">
+            <li><a href="#" class="hover:text-white transition-colors">Pusat Bantuan</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">FAQ</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Hubungi Kami</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Kebijakan Privasi</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h6 class="font-bold text-lg mb-4">Kontak</h6>
+          <div class="space-y-2 text-green-200">
+            <p>📍 Jl. Diponegoro No.22, Bandung</p>
+            <p>📞 (022) 1234-5678</p>
+            <p>✉️ info@regenerasipetani.id</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="border-t border-green-800 pt-8 text-center text-green-300">
+        <p>©2023 Pemerintah Provinsi Jawa Barat. Semua hak dilindungi.</p>
+      </div>
+    </div>
   </footer>
 
 </body>
