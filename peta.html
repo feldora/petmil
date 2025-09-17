@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Peta Sebaran - Regenerasi Petani</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body class="bg-white">
+
+  <!-- Navbar -->
+  <div class="navbar bg-white shadow-md fixed top-0 w-full z-50">
+    <div class="flex-1 px-2">
+      <a href="index.html" class="font-bold text-lg">🌱 Regenerasi Petani</a>
+    </div>
+    <div class="hidden md:flex">
+      <ul class="menu menu-horizontal">
+        <li><a href="index.html">Beranda</a></li>
+        <li><a href="produk.html">Produk</a></li>
+        <li><a class="active">Peta Sebaran</a></li>
+        <li><a href="#">Kontak</a></li>
+      </ul>
+    </div>
+    <div class="flex-none hidden md:block">
+      <a href="login.html" class="btn btn-success btn-sm">Masuk</a>
+    </div>
+  </div>
+
+  <!-- Peta -->
+  <section class="pt-20 h-screen">
+    <div class="grid md:grid-cols-4 h-full">
+      <!-- Sidebar Filter -->
+      <aside class="p-4 bg-gray-50 border-r h-full overflow-y-auto">
+        <h2 class="font-bold mb-4">Layers Data</h2>
+        <div>
+          <p class="font-semibold">Dinas Teknis</p>
+          <ul class="ml-2 text-sm">
+            <li><input type="checkbox" checked> DISBUN</li>
+            <li><input type="checkbox"> DKP</li>
+          </ul>
+        </div>
+        <div class="mt-4">
+          <p class="font-semibold">Status Keaktifan</p>
+          <ul class="ml-2 text-sm">
+            <li><input type="checkbox" checked> Aktif</li>
+            <li><input type="checkbox"> Tidak Aktif</li>
+          </ul>
+        </div>
+      </aside>
+
+      <!-- Peta -->
+      <div id="map" class="col-span-3 w-full h-full"></div>
+    </div>
+  </section>
+
+  <script>
+    var map = L.map('map').setView([-6.914744, 107.60981], 8); // Bandung
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    L.marker([-6.914744, 107.60981]).addTo(map)
+      .bindPopup('Bandung - Contoh Data')
+      .openPopup();
+  </script>
+</body>
+</html>
