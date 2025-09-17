@@ -1,0 +1,3668 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PETMIL - Program Inovasi Petani Milenial Tangguh</title>
+
+    <!-- Tailwind CSS + DaisyUI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.0/dist/full.css" rel="stylesheet" type="text/css" />
+
+    <!-- Leaflet for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        /* Custom CSS for better mobile experience */
+        .mobile-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+        }
+
+        .content-with-mobile-nav {
+            padding-bottom: 80px;
+        }
+
+        @media (min-width: 768px) {
+            .mobile-nav {
+                display: none;
+            }
+
+            .content-with-mobile-nav {
+                padding-bottom: 0;
+            }
+        }
+
+        .sidebar {
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        @media (max-width: 767px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                z-index: 40;
+            }
+        }
+
+        .map-container {
+            height: 400px;
+            width: 100%;
+        }
+
+        .offline-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Offline Indicator -->
+    <div id="offlineIndicator" class="offline-indicator alert alert-warning hidden">
+        <i class="fas fa-wifi"></i>
+        <span>Mode Offline - Data akan disinkronisasi saat online</span>
+        <button id="syncBtn" class="btn btn-sm btn-primary ml-2">Sync</button>
+    </div>
+
+    <!-- Desktop Header -->
+    <div class="navbar bg-primary text-primary-content md:flex hidden">
+        <div class="navbar-start">
+            <button id="sidebarToggle" class="btn btn-ghost">
+                <i class="fas fa-bars"></i>
+            </button>
+            <a class="btn btn-ghost text-xl">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNCIgZmlsbD0iIzAwNzk0NiIvPgo8cGF0aCBkPSJNMTYgOEMyMC40MTgyIDggMjQgMTEuNTgxNyAyNCAxNkMyNCAyMC40MTgzIDIwLjQxODMgMjQgMTYgMjRDMTEuNTgxNyAyNCA4IDIwLjQxODMgOCAxNkM4IDExLjU4MTcgMTEuNTgxNyA4IDE2IDhaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTYgMTJDMTguMjA5MSAxMiAyMCAxMy43OTA5IDIwIDE2QzIwIDE4LjIwOTEgMTguMjA5MSAyMCAxNiAyMEMxMy43OTA5IDIwIDEyIDE4LjIwOTEgMTIgMTZDMTIgMTMuNzkwOSAxMy43OTA5IDEyIDE2IDEyWiIgZmlsbD0iIzAwNzk0NiIvPgo8L3N2Zz4K"
+                    alt="PETMIL Logo" class="w-8 h-8">
+                PETMIL
+            </a>
+        </div>
+
+        <div class="navbar-center">
+            <span class="text-sm">Program Inovasi Petani Milenial Tangguh - Sulawesi Tengah</span>
+        </div>
+
+        <div class="navbar-end">
+            <div class="dropdown dropdown-end">
+                <div tabindex="0" role="button" class="btn btn-ghost btn-circle">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge badge-sm badge-accent" id="notifCount">3</span>
+                </div>
+                <div tabindex="0"
+                    class="dropdown-content z-[1] menu p-2 shadow bg-base-100 text-base-content rounded-box w-80">
+                    <div class="p-4">
+                        <h3 class="font-bold mb-2">Notifikasi</h3>
+                        <div class="space-y-2">
+                            <div class="p-2 bg-base-200 rounded">
+                                <p class="text-sm">Pelatihan Budidaya Padi dimulai besok</p>
+                                <span class="text-xs text-gray-500">2 jam lalu</span>
+                            </div>
+                            <div class="p-2 bg-base-200 rounded">
+                                <p class="text-sm">Verifikasi dokumen berhasil</p>
+                                <span class="text-xs text-gray-500">1 hari lalu</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dropdown dropdown-end">
+                <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+                    <div class="w-10 rounded-full">
+                        <img alt="Profile"
+                            src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEMUQ1REIiLz4KPHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNEMUQ1REIiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0iIzZCNzI4MCIvPgo8cGF0aCBkPSJNOCAzMkM4IDI2LjQ3NzIgMTIuNDc3MiAyMiAxOCAyMkgyMkMyNy41MjI4IDIyIDMyIDI2LjQ3NzIgMzIgMzJWMzRIOFYzMloiIGZpbGw9IiM2QjcyODAiLz4KPC9zdmc+Cgo8L3N2Zz4K" />
+                    </div>
+                </div>
+                <ul tabindex="0"
+                    class="dropdown-content z-[1] menu p-2 shadow bg-base-100 text-base-content rounded-box w-52">
+                    <li><a href="#" onclick="showView('profile')"><i class="fas fa-user"></i> Profil</a></li>
+                    <li><a href="#" onclick="showView('settings')"><i class="fas fa-cog"></i> Pengaturan</a></li>
+                    <li><a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Keluar</a></li>
+                </ul>
+            </div>
+
+            <label class="swap swap-rotate">
+                <input type="checkbox" id="themeToggle" />
+                <i class="swap-on fas fa-sun"></i>
+                <i class="swap-off fas fa-moon"></i>
+            </label>
+        </div>
+    </div>
+
+    <div class="flex">
+        <!-- Desktop Sidebar -->
+        <div id="sidebar" class="sidebar bg-base-200 w-64 min-h-screen md:block hidden">
+            <ul class="menu p-4 text-base-content">
+                <li><a href="#" onclick="showView('home')" class="menu-item" data-view="home">
+                        <i class="fas fa-home"></i> Beranda
+                    </a></li>
+                <li><a href="#" onclick="showView('dashboard')" class="menu-item" data-view="dashboard">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a></li>
+                <li class="menu-title">Petani</li>
+                <li><a href="#" onclick="showView('profile')" class="menu-item" data-view="profile">
+                        <i class="fas fa-user"></i> Profil Saya
+                    </a></li>
+                <li><a href="#" onclick="showView('journal')" class="menu-item" data-view="journal">
+                        <i class="fas fa-book"></i> Jurnal Produksi
+                    </a></li>
+                <li><a href="#" onclick="showView('elearning')" class="menu-item" data-view="elearning">
+                        <i class="fas fa-graduation-cap"></i> E-Learning
+                    </a></li>
+                <li><a href="#" onclick="showView('magang')" class="menu-item" data-view="magang">
+                        <i class="fas fa-briefcase"></i> Magang
+                    </a></li>
+                <li><a href="#" onclick="showView('pembiayaan')" class="menu-item" data-view="pembiayaan">
+                        <i class="fas fa-money-bill-wave"></i> Pembiayaan
+                    </a></li>
+                <li class="menu-title">Admin</li>
+                <li><a href="#" onclick="showView('verifikasi')" class="menu-item" data-view="verifikasi">
+                        <i class="fas fa-check-circle"></i> Verifikasi
+                    </a></li>
+                <li><a href="#" onclick="showView('peta')" class="menu-item" data-view="peta">
+                        <i class="fas fa-map"></i> Pemetaan Lahan
+                    </a></li>
+                <li><a href="#" onclick="showView('marketplace')" class="menu-item" data-view="marketplace">
+                        <i class="fas fa-store"></i> Marketplace
+                    </a></li>
+                <li><a href="#" onclick="showView('laporan')" class="menu-item" data-view="laporan">
+                        <i class="fas fa-chart-bar"></i> Laporan
+                    </a></li>
+                <li><a href="#" onclick="showView('help')" class="menu-item" data-view="help">
+                        <i class="fas fa-question-circle"></i> Bantuan
+                    </a></li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 content-with-mobile-nav">
+            <!-- Loading Spinner -->
+            <div id="loadingSpinner"
+                class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+                <div class="loading loading-spinner loading-lg text-primary"></div>
+            </div>
+
+            <!-- HOME VIEW -->
+            <div id="homeView" class="view p-4">
+                <!-- Hero Section -->
+                <div class="hero bg-gradient-to-r from-green-600 to-green-800 text-white rounded-lg mb-6">
+                    <div class="hero-content text-center py-12">
+                        <div class="max-w-md">
+                            <h1 class="text-4xl font-bold">PETMIL</h1>
+                            <p class="py-6 text-xl">Program Inovasi Petani Milenial Tangguh</p>
+                            <p class="mb-6">Membangun masa depan pertanian Sulawesi Tengah melalui regenerasi petani
+                                muda yang canggih, unggul, dan mendunia</p>
+                            <div class="space-y-2 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center">
+                                <button onclick="showView('register')" class="btn btn-accent w-full sm:w-auto">
+                                    <i class="fas fa-user-plus"></i> Daftar Petani
+                                </button>
+                                <button onclick="showView('help')" class="btn btn-outline btn-white w-full sm:w-auto">
+                                    <i class="fas fa-phone"></i> Kontak
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Services Overview -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="card bg-base-100 shadow-xl">
+                        <div class="card-body text-center">
+                            <i class="fas fa-seedling text-4xl text-green-600 mb-4"></i>
+                            <h2 class="card-title justify-center">Pelatihan Modern</h2>
+                            <p>Program pelatihan komprehensif dengan teknologi terkini</p>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-100 shadow-xl">
+                        <div class="card-body text-center">
+                            <i class="fas fa-handshake text-4xl text-blue-600 mb-4"></i>
+                            <h2 class="card-title justify-center">Akses Pembiayaan</h2>
+                            <p>Kemudahan akses modal usaha melalui program KUR</p>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-100 shadow-xl">
+                        <div class="card-body text-center">
+                            <i class="fas fa-chart-line text-4xl text-orange-600 mb-4"></i>
+                            <h2 class="card-title justify-center">Pendampingan Usaha</h2>
+                            <p>Bimbingan berkelanjutan dari pelatihan hingga pemasaran</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Target & Statistics -->
+                <div class="stats shadow w-full mb-6">
+                    <div class="stat">
+                        <div class="stat-figure text-primary">
+                            <i class="fas fa-users text-3xl"></i>
+                        </div>
+                        <div class="stat-title">Target Pendaftar</div>
+                        <div class="stat-value text-primary">10,000</div>
+                        <div class="stat-desc">Generasi muda milenial</div>
+                    </div>
+
+                    <div class="stat">
+                        <div class="stat-figure text-secondary">
+                            <i class="fas fa-user-check text-3xl"></i>
+                        </div>
+                        <div class="stat-title">Petani Milenial</div>
+                        <div class="stat-value text-secondary">5,000</div>
+                        <div class="stat-desc">Target 2025</div>
+                    </div>
+
+                    <div class="stat">
+                        <div class="stat-figure text-accent">
+                            <i class="fas fa-briefcase text-3xl"></i>
+                        </div>
+                        <div class="stat-title">Wirausahawan</div>
+                        <div class="stat-value text-accent">2,500</div>
+                        <div class="stat-desc">Mandiri & inovatif</div>
+                    </div>
+                </div>
+
+                <!-- Auth Buttons -->
+                <div class="text-center">
+                    <div class="join">
+                        <button onclick="showView('login')" class="btn btn-primary join-item">
+                            <i class="fas fa-sign-in-alt"></i> Masuk
+                        </button>
+                        <button onclick="showView('register')" class="btn btn-secondary join-item">
+                            <i class="fas fa-user-plus"></i> Daftar Baru
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LOGIN VIEW -->
+            <div id="loginView" class="view hidden p-4">
+                <div class="max-w-md mx-auto">
+                    <div class="card bg-base-100 shadow-xl">
+                        <div class="card-body">
+                            <h2 class="card-title justify-center mb-6">
+                                <i class="fas fa-sign-in-alt"></i> Masuk PETMIL
+                            </h2>
+
+                            <form id="loginForm" onsubmit="handleLogin(event)">
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Email/Username</span>
+                                    </label>
+                                    <input type="text" placeholder="Masukkan email atau username"
+                                        class="input input-bordered" required>
+                                </div>
+
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Password</span>
+                                    </label>
+                                    <input type="password" placeholder="Masukkan password" class="input input-bordered"
+                                        required>
+                                </div>
+
+                                <div class="form-control mt-6">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-sign-in-alt"></i> Masuk
+                                    </button>
+                                </div>
+                            </form>
+
+                            <div class="divider">ATAU</div>
+
+                            <button onclick="showOTPLogin()" class="btn btn-outline btn-secondary w-full mb-4">
+                                <i class="fas fa-mobile-alt"></i> Masuk dengan OTP
+                            </button>
+
+                            <div class="text-center">
+                                <p>Belum punya akun?
+                                    <button onclick="showView('register')" class="link link-primary">Daftar di
+                                        sini</button>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REGISTER VIEW -->
+            <div id="registerView" class="view hidden p-4">
+                <div class="max-w-2xl mx-auto">
+                    <div class="card bg-base-100 shadow-xl">
+                        <div class="card-body">
+                            <h2 class="card-title justify-center mb-6">
+                                <i class="fas fa-user-plus"></i> Pendaftaran Petani Milenial
+                            </h2>
+
+                            <form id="registerForm" onsubmit="handleRegister(event)">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="form-control">
+                                        <label class="label">
+                                            <span class="label-text">Nama Lengkap *</span>
+                                        </label>
+                                        <input type="text" name="nama" placeholder="Nama lengkap sesuai KTP"
+                                            class="input input-bordered" required>
+                                    </div>
+
+                                    <div class="form-control">
+                                        <label class="label">
+                                            <span class="label-text">NIK *</span>
+                                        </label>
+                                        <input type="text" name="nik" placeholder="16 digit NIK"
+                                            class="input input-bordered" pattern="[0-9]{16}" required>
+                                    </div>
+
+                                    <div class="form-control">
+                                        <label class="label">
+                                            <span class="label-text">Tanggal Lahir *</span>
+                                        </label>
+                                        <input type="date" name="tanggal_lahir" class="input input-bordered" required>
+                                    </div>
+
+                                    <div class="form-control">
+                                        <label class="label">
+                                            <span class="label-text">Nomor HP *</span>
+                                        </label>
+                                        <input type="tel" name="hp" placeholder="08xxxxxxxxxx"
+                                            class="input input-bordered" pattern="[0-9]{10,13}" required>
+                                    </div>
+                                </div>
+
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Email</span>
+                                    </label>
+                                    <input type="email" name="email" placeholder="email@example.com"
+                                        class="input input-bordered">
+                                </div>
+
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Alamat Lengkap *</span>
+                                    </label>
+                                    <textarea name="alamat" class="textarea textarea-bordered"
+                                        placeholder="Alamat lengkap termasuk RT/RW" required></textarea>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="form-control">
+                                        <label class="label">
+                                            <span class="label-text">Desa *</span>
+                                        </label>
+                                        <input type="text" name="desa" placeholder="Nama desa"
+                                            class="input input-bordered" required>
+                                    </div>
+
+                                    <div class="form-control">
+                                        <label class="label">
+                                            <span class="label-text">Kecamatan *</span>
+                                        </label>
+                                        <input type="text" name="kecamatan" placeholder="Nama kecamatan"
+                                            class="input input-bordered" required>
+                                    </div>
+
+                                    <div class="form-control">
+                                        <label class="label">
+                                            <span class="label-text">Kabupaten/Kota *</span>
+                                        </label>
+                                        <select name="kabupaten" class="select select-bordered" required>
+                                            <option disabled selected>Pilih Kabupaten/Kota</option>
+                                            <option>Kota Palu</option>
+                                            <option>Kabupaten Donggala</option>
+                                            <option>Kabupaten Sigi</option>
+                                            <option>Kabupaten Parigi Moutong</option>
+                                            <option>Kabupaten Toli-toli</option>
+                                            <option>Kabupaten Buol</option>
+                                            <option>Kabupaten Morowali</option>
+                                            <option>Kabupaten Banggai</option>
+                                            <option>Kabupaten Banggai Kepulauan</option>
+                                            <option>Kabupaten Tojo Una-Una</option>
+                                            <option>Kabupaten Morowali Utara</option>
+                                            <option>Kabupaten Banggai Laut</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Pengalaman Pertanian</span>
+                                    </label>
+                                    <select name="pengalaman" class="select select-bordered">
+                                        <option disabled selected>Pilih pengalaman</option>
+                                        <option>Tidak ada pengalaman</option>
+                                        <option>Kurang dari 1 tahun</option>
+                                        <option>1-2 tahun</option>
+                                        <option>3-5 tahun</option>
+                                        <option>Lebih dari 5 tahun</option>
+                                    </select>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="form-control">
+                                        <label class="label">
+                                            <span class="label-text">Luas Lahan (Ha)</span>
+                                        </label>
+                                        <input type="number" name="luas_lahan" placeholder="0.5" step="0.1"
+                                            class="input input-bordered">
+                                    </div>
+
+                                    <div class="form-control">
+                                        <label class="label">
+                                            <span class="label-text">Jenis Komoditas</span>
+                                        </label>
+                                        <select name="komoditas" class="select select-bordered">
+                                            <option disabled selected>Pilih komoditas</option>
+                                            <option>Padi</option>
+                                            <option>Jagung</option>
+                                            <option>Sayuran</option>
+                                            <option>Buah-buahan</option>
+                                            <option>Kakao</option>
+                                            <option>Kopi</option>
+                                            <option>Peternakan</option>
+                                            <option>Perikanan</option>
+                                            <option>Kehutanan</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Upload Foto KTP *</span>
+                                    </label>
+                                    <input type="file" name="foto_ktp" accept="image/*"
+                                        class="file-input file-input-bordered w-full" required>
+                                    <div class="label">
+                                        <span class="label-text-alt">Format: JPG, PNG. Max 2MB</span>
+                                    </div>
+                                </div>
+
+                                <div class="form-control">
+                                    <label class="cursor-pointer label">
+                                        <input type="checkbox" class="checkbox" required>
+                                        <span class="label-text">Saya menyetujui syarat dan ketentuan Program PETMIL
+                                            *</span>
+                                    </label>
+                                </div>
+
+                                <div class="form-control mt-6">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-user-plus"></i> Daftar
+                                    </button>
+                                </div>
+                            </form>
+
+                            <div class="text-center mt-4">
+                                <p>Sudah punya akun?
+                                    <button onclick="showView('login')" class="link link-primary">Masuk di sini</button>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DASHBOARD VIEW -->
+            <div id="dashboardView" class="view hidden p-4">
+                <div class="mb-6">
+                    <h1 class="text-3xl font-bold">Dashboard Petani</h1>
+                    <p class="text-gray-600">Selamat datang kembali, Budi Santoso</p>
+                </div>
+
+                <!-- Status Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="card bg-primary text-primary-content">
+                        <div class="card-body">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h2 class="card-title">Status</h2>
+                                    <p class="text-sm">Terverifikasi</p>
+                                </div>
+                                <i class="fas fa-check-circle text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card bg-secondary text-secondary-content">
+                        <div class="card-body">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h2 class="card-title">Pelatihan</h2>
+                                    <p class="text-sm">3 Modul</p>
+                                </div>
+                                <i class="fas fa-graduation-cap text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card bg-accent text-accent-content">
+                        <div class="card-body">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h2 class="card-title">Jurnal</h2>
+                                    <p class="text-sm">15 Entri</p>
+                                </div>
+                                <i class="fas fa-book text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card bg-info text-info-content">
+                        <div class="card-body">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h2 class="card-title">Pembiayaan</h2>
+                                    <p class="text-sm">Disetujui</p>
+                                </div>
+                                <i class="fas fa-money-bill-wave text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card bg-base-100 shadow-xl mb-6">
+                    <div class="card-body">
+                        <h2 class="card-title">Quick Actions</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <button onclick="showView('journal')" class="btn btn-outline btn-primary">
+                                <i class="fas fa-plus"></i> Tambah Jurnal
+                            </button>
+                            <button onclick="showView('elearning')" class="btn btn-outline btn-secondary">
+                                <i class="fas fa-play"></i> Lanjut Belajar
+                            </button>
+                            <button onclick="showView('pembiayaan')" class="btn btn-outline btn-accent">
+                                <i class="fas fa-file-alt"></i> Cek Pembiayaan
+                            </button>
+                            <button onclick="showView('help')" class="btn btn-outline btn-info">
+                                <i class="fas fa-question"></i> Bantuan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activities -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card bg-base-100 shadow-xl">
+                        <div class="card-body">
+                            <h2 class="card-title">Aktivitas Terbaru</h2>
+                            <div class="space-y-4">
+                                <div class="flex items-center space-x-4">
+                                    <div class="avatar placeholder">
+                                        <div class="bg-primary text-primary-content rounded-full w-12">
+                                            <i class="fas fa-book"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-semibold">Jurnal produksi padi ditambahkan</p>
+                                        <p class="text-sm text-gray-500">2 jam lalu</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center space-x-4">
+                                    <div class="avatar placeholder">
+                                        <div class="bg-secondary text-secondary-content rounded-full w-12">
+                                            <i class="fas fa-graduation-cap"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-semibold">Modul "Budidaya Modern" selesai</p>
+                                        <p class="text-sm text-gray-500">1 hari lalu</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center space-x-4">
+                                    <div class="avatar placeholder">
+                                        <div class="bg-accent text-accent-content rounded-full w-12">
+                                            <i class="fas fa-check"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-semibold">Verifikasi dokumen berhasil</p>
+                                        <p class="text-sm text-gray-500">3 hari lalu</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-100 shadow-xl">
+                        <div class="card-body">
+                            <h2 class="card-title">Jadwal Mendatang</h2>
+                            <div class="space-y-4">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-calendar"></i>
+                                    <div>
+                                        <h3 class="font-bold">Pelatihan Teknologi Digital</h3>
+                                        <div class="text-xs">Besok, 09:00 - 12:00</div>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-users"></i>
+                                    <div>
+                                        <h3 class="font-bold">Kunjungan Offtaker</h3>
+                                        <div class="text-xs">15 Des 2024, 10:00</div>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-success">
+                                    <i class="fas fa-handshake"></i>
+                                    <div>
+                                        <h3 class="font-bold">Evaluasi Magang</h3>
+                                        <div class="text-xs">20 Des 2024, 14:00</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PROFILE VIEW -->
+            <div id="profileView" class="view hidden p-4">
+                <div class="max-w-4xl mx-auto">
+                    <div class="mb-6">
+                        <h1 class="text-3xl font-bold">Profil Petani</h1>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Profile Card -->
+                        <div class="card bg-base-100 shadow-xl">
+                            <div class="card-body text-center">
+                                <div class="avatar">
+                                    <div class="w-24 rounded-full">
+                                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCA5NiA5NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDgiIGN5PSI0OCIgcj0iNDgiIGZpbGw9IiNEMUQ1REIiLz4KPGNpcmNsZSBjeD0iNDgiIGN5PSIzOCIgcj0iMTQiIGZpbGw9IiM2QjcyODAiLz4KPHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCA5NiA5NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDgiIGN5PSI0OCIgcj0iNDgiIGZpbGw9IiNEMUQ1REIiLz4KPGNpcmNsZSBjeD0iNDgiIGN5PSIzOCIgcj0iMTQiIGZpbGw9IiM2QjcyODAiLz4KPHBhdGggZD0iTTE2IDgwQzE2IDY1Ljc5IDI3LjMzIDU0IDQyIDU0SDU0QzY4LjY3IDU0IDgwIDY1Ljc5IDgwIDgwVjg2SDE2Vjg2WiIgZmlsbD0iIzZCNzI4MCIvPgo8L3N2Zz4KPC9zdmc+"
+                                            alt="Profile" />
+                                    </div>
+                                </div>
+                                <h2 class="card-title justify-center">Budi Santoso</h2>
+                                <div class="badge badge-primary">Petani Milenial Terverifikasi</div>
+                                <div class="stats stats-vertical shadow mt-4">
+                                    <div class="stat">
+                                        <div class="stat-title">Status</div>
+                                        <div class="stat-value text-sm">Aktif</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-title">Bergabung</div>
+                                        <div class="stat-value text-sm">Jan 2024</div>
+                                    </div>
+                                </div>
+                                <button onclick="editProfile()" class="btn btn-primary btn-sm mt-4">
+                                    <i class="fas fa-edit"></i> Edit Profil
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Personal Info -->
+                        <div class="lg:col-span-2 space-y-6">
+                            <div class="card bg-base-100 shadow-xl">
+                                <div class="card-body">
+                                    <h3 class="card-title">Informasi Pribadi</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="label">
+                                                <span class="label-text font-semibold">NIK</span>
+                                            </label>
+                                            <p>7201234567890123</p>
+                                        </div>
+                                        <div>
+                                            <label class="label">
+                                                <span class="label-text font-semibold">Tanggal Lahir</span>
+                                            </label>
+                                            <p>15 Maret 1995</p>
+                                        </div>
+                                        <div>
+                                            <label class="label">
+                                                <span class="label-text font-semibold">Nomor HP</span>
+                                            </label>
+                                            <p>081234567890</p>
+                                        </div>
+                                        <div>
+                                            <label class="label">
+                                                <span class="label-text font-semibold">Email</span>
+                                            </label>
+                                            <p>budi.santoso@email.com</p>
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="label">
+                                                <span class="label-text font-semibold">Alamat</span>
+                                            </label>
+                                            <p>Jl. Tani Maju No. 123, RT 01/RW 02, Desa Sejahtera, Kec. Palu Selatan,
+                                                Kota Palu</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card bg-base-100 shadow-xl">
+                                <div class="card-body">
+                                    <h3 class="card-title">Informasi Usaha Tani</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="label">
+                                                <span class="label-text font-semibold">Luas Lahan</span>
+                                            </label>
+                                            <p>2.5 Ha</p>
+                                        </div>
+                                        <div>
+                                            <label class="label">
+                                                <span class="label-text font-semibold">Komoditas Utama</span>
+                                            </label>
+                                            <p>Padi, Jagung</p>
+                                        </div>
+                                        <div>
+                                            <label class="label">
+                                                <span class="label-text font-semibold">Pengalaman</span>
+                                            </label>
+                                            <p>3-5 tahun</p>
+                                        </div>
+                                        <div>
+                                            <label class="label">
+                                                <span class="label-text font-semibold">Status Lahan</span>
+                                            </label>
+                                            <p>Milik Sendiri</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-6">
+                                        <button onclick="showView('pembiayaan')" class="btn btn-accent">
+                                            <i class="fas fa-money-bill-wave"></i> Ajukan Pembiayaan
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card bg-base-100 shadow-xl">
+                                <div class="card-body">
+                                    <h3 class="card-title">Dokumen</h3>
+                                    <div class="space-y-4">
+                                        <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg">
+                                            <div class="flex items-center space-x-4">
+                                                <i class="fas fa-id-card text-2xl text-primary"></i>
+                                                <div>
+                                                    <p class="font-semibold">KTP</p>
+                                                    <p class="text-sm text-gray-500">Uploaded: 10 Jan 2024</p>
+                                                </div>
+                                            </div>
+                                            <div class="badge badge-success">Terverifikasi</div>
+                                        </div>
+
+                                        <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg">
+                                            <div class="flex items-center space-x-4">
+                                                <i class="fas fa-camera text-2xl text-secondary"></i>
+                                                <div>
+                                                    <p class="font-semibold">Foto Lahan</p>
+                                                    <p class="text-sm text-gray-500">3 foto</p>
+                                                </div>
+                                            </div>
+                                            <button class="btn btn-sm btn-outline">Lihat</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- JOURNAL VIEW -->
+            <div id="journalView" class="view hidden p-4">
+                <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h1 class="text-3xl font-bold">Jurnal Produksi</h1>
+                        <p class="text-gray-600">Catat dan pantau aktivitas produksi Anda</p>
+                    </div>
+                    <button onclick="showJournalForm()" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Tambah Entri
+                    </button>
+                </div>
+
+                <!-- Journal Form (Hidden by default) -->
+                <div id="journalForm" class="card bg-base-100 shadow-xl mb-6 hidden">
+                    <div class="card-body">
+                        <h2 class="card-title">Tambah Entri Jurnal</h2>
+                        <form onsubmit="addJournalEntry(event)">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Tanggal</span>
+                                    </label>
+                                    <input type="date" name="tanggal" class="input input-bordered" required>
+                                </div>
+
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Jenis Aktivitas</span>
+                                    </label>
+                                    <select name="aktivitas" class="select select-bordered" required>
+                                        <option disabled selected>Pilih aktivitas</option>
+                                        <option>Tanam</option>
+                                        <option>Perawatan</option>
+                                        <option>Pemupukan</option>
+                                        <option>Penyemprotan</option>
+                                        <option>Panen</option>
+                                        <option>Pasca Panen</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Komoditas</span>
+                                    </label>
+                                    <input type="text" name="komoditas" placeholder="Padi, Jagung, dll"
+                                        class="input input-bordered" required>
+                                </div>
+
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Kuantitas</span>
+                                    </label>
+                                    <input type="number" name="kuantitas" placeholder="0" class="input input-bordered"
+                                        step="0.1">
+                                </div>
+
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Satuan</span>
+                                    </label>
+                                    <select name="satuan" class="select select-bordered">
+                                        <option>Kg</option>
+                                        <option>Ton</option>
+                                        <option>Liter</option>
+                                        <option>m²</option>
+                                        <option>Ha</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Upload Foto</span>
+                                    </label>
+                                    <input type="file" name="foto" accept="image/*"
+                                        class="file-input file-input-bordered">
+                                </div>
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">Catatan</span>
+                                </label>
+                                <textarea name="catatan" class="textarea textarea-bordered"
+                                    placeholder="Catatan tambahan..."></textarea>
+                            </div>
+
+                            <div class="form-control mt-6">
+                                <div class="flex gap-4">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Simpan
+                                    </button>
+                                    <button type="button" onclick="hideJournalForm()" class="btn btn-ghost">
+                                        Batal
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Journal Entries -->
+                <div id="journalEntries" class="space-y-4">
+                    <!-- Sample entries will be populated by JavaScript -->
+                </div>
+
+                <!-- Offline Status -->
+                <div id="offlineJournal" class="alert alert-warning mt-6 hidden">
+                    <i class="fas fa-wifi-slash"></i>
+                    <span>Data disimpan secara offline. Klik "Sync" untuk sinkronisasi.</span>
+                    <button onclick="syncJournalData()" class="btn btn-sm btn-primary">Sync</button>
+                </div>
+            </div>
+
+            <!-- E-LEARNING VIEW -->
+            <div id="elearningView" class="view hidden p-4">
+                <div class="mb-6">
+                    <h1 class="text-3xl font-bold">E-Learning</h1>
+                    <p class="text-gray-600">Pelajari teknologi pertanian modern</p>
+                </div>
+
+                <!-- Course Progress -->
+                <div class="card bg-base-100 shadow-xl mb-6">
+                    <div class="card-body">
+                        <h2 class="card-title">Progress Pembelajaran</h2>
+                        <div class="stats stats-horizontal shadow">
+                            <div class="stat">
+                                <div class="stat-title">Total Kursus</div>
+                                <div class="stat-value text-primary">5</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-title">Selesai</div>
+                                <div class="stat-value text-success">3</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-title">Progress</div>
+                                <div class="stat-value text-warning">60%</div>
+                            </div>
+                        </div>
+                        <progress class="progress progress-primary w-full" value="60" max="100"></progress>
+                    </div>
+                </div>
+
+                <!-- Course List -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="courseList">
+                    <!-- Courses will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- COURSE DETAIL VIEW -->
+            <div id="courseDetailView" class="view hidden p-4">
+                <div class="max-w-4xl mx-auto">
+                    <div class="mb-6">
+                        <button onclick="showView('elearning')" class="btn btn-ghost mb-4">
+                            <i class="fas fa-arrow-left"></i> Kembali ke Kursus
+                        </button>
+                        <h1 class="text-3xl font-bold" id="courseTitle">Detail Kursus</h1>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                        <!-- Video Player -->
+                        <div class="lg:col-span-3">
+                            <div class="card bg-base-100 shadow-xl">
+                                <div class="card-body p-0">
+                                    <div class="aspect-video bg-gray-900 rounded-t-lg flex items-center justify-center">
+                                        <div class="text-center text-white">
+                                            <i class="fas fa-play-circle text-6xl mb-4"></i>
+                                            <p>Video Pembelajaran</p>
+                                            <button onclick="playVideo()" class="btn btn-primary mt-4">
+                                                <i class="fas fa-play"></i> Mulai Video
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="p-6">
+                                        <h2 class="text-xl font-bold mb-4" id="lessonTitle">Lesson 1: Pengenalan
+                                            Teknologi</h2>
+                                        <div class="flex items-center justify-between mb-4">
+                                            <div class="badge badge-primary">Video • 15 menit</div>
+                                            <div class="badge badge-success">Selesai</div>
+                                        </div>
+                                        <p id="lessonDescription">Pelajari dasar-dasar teknologi pertanian modern dan
+                                            implementasinya di lapangan.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Quiz Section -->
+                            <div class="card bg-base-100 shadow-xl mt-6">
+                                <div class="card-body">
+                                    <h3 class="card-title">Quiz</h3>
+                                    <div id="quizContainer">
+                                        <div class="space-y-4">
+                                            <div>
+                                                <p class="font-semibold mb-2">1. Apa keuntungan utama teknologi IoT
+                                                    dalam pertanian?</p>
+                                                <div class="space-y-2">
+                                                    <label class="cursor-pointer label">
+                                                        <input type="radio" name="q1" value="a" class="radio">
+                                                        <span class="label-text">Monitoring real-time</span>
+                                                    </label>
+                                                    <label class="cursor-pointer label">
+                                                        <input type="radio" name="q1" value="b" class="radio">
+                                                        <span class="label-text">Biaya lebih murah</span>
+                                                    </label>
+                                                    <label class="cursor-pointer label">
+                                                        <input type="radio" name="q1" value="c" class="radio">
+                                                        <span class="label-text">Tidak perlu perawatan</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <p class="font-semibold mb-2">2. Sensor apa yang paling penting untuk
+                                                    monitoring tanah?</p>
+                                                <div class="space-y-2">
+                                                    <label class="cursor-pointer label">
+                                                        <input type="radio" name="q2" value="a" class="radio">
+                                                        <span class="label-text">Sensor kelembaban</span>
+                                                    </label>
+                                                    <label class="cursor-pointer label">
+                                                        <input type="radio" name="q2" value="b" class="radio">
+                                                        <span class="label-text">Sensor suhu udara</span>
+                                                    </label>
+                                                    <label class="cursor-pointer label">
+                                                        <input type="radio" name="q2" value="c" class="radio">
+                                                        <span class="label-text">Sensor cahaya</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-6">
+                                            <button onclick="submitQuiz()" class="btn btn-primary">
+                                                <i class="fas fa-check"></i> Submit Quiz
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Course Outline -->
+                        <div class="space-y-6">
+                            <div class="card bg-base-100 shadow-xl">
+                                <div class="card-body">
+                                    <h3 class="card-title">Outline Kursus</h3>
+                                    <ul class="menu menu-compact" id="courseOutline">
+                                        <!-- Populated by JavaScript -->
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="card bg-base-100 shadow-xl">
+                                <div class="card-body">
+                                    <h3 class="card-title">Progress</h3>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <div class="flex justify-between text-sm">
+                                                <span>Penyelesaian</span>
+                                                <span id="courseProgress">75%</span>
+                                            </div>
+                                            <progress class="progress progress-primary w-full" value="75"
+                                                max="100"></progress>
+                                        </div>
+
+                                        <div class="stats stats-vertical shadow">
+                                            <div class="stat">
+                                                <div class="stat-title">Lesson Selesai</div>
+                                                <div class="stat-value text-sm">3/4</div>
+                                            </div>
+                                            <div class="stat">
+                                                <div class="stat-title">Quiz Score</div>
+                                                <div class="stat-value text-sm">85%</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MAGANG VIEW -->
+            <div id="magangView" class="view hidden p-4">
+                <div class="mb-6">
+                    <h1 class="text-3xl font-bold">Magang & Inkubasi</h1>
+                    <p class="text-gray-600">Program magang dan inkubasi bisnis untuk Petani Milenial</p>
+                </div>
+
+                <!-- Status Card -->
+                <div class="card bg-base-100 shadow-xl mb-6">
+                    <div class="card-body">
+                        <h2 class="card-title">Status Magang Anda</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="stat">
+                                <div class="stat-title">Status</div>
+                                <div class="stat-value text-success">Aktif</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-title">Durasi</div>
+                                <div class="stat-value text-primary">3 Bulan</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-title">Progress</div>
+                                <div class="stat-value text-warning">60%</div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <div class="flex justify-between text-sm mb-2">
+                                <span>Progress Magang</span>
+                                <span>60%</span>
+                            </div>
+                            <progress class="progress progress-primary w-full" value="60" max="100"></progress>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Program -->
+                <div class="card bg-base-100 shadow-xl mb-6">
+                    <div class="card-body">
+                        <h2 class="card-title">Program Saat Ini</h2>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="label">
+                                            <span class="label-text font-semibold">Tempat Magang</span>
+                                        </label>
+                                        <p>CV. Tani Maju Sejahtera</p>
+                                    </div>
+                                    <div>
+                                        <label class="label">
+                                            <span class="label-text font-semibold">Mentor</span>
+                                        </label>
+                                        <p>Pak Ahmad Hidayat</p>
+                                    </div>
+                                    <div>
+                                        <label class="label">
+                                            <span class="label-text font-semibold">Lokasi</span>
+                                        </label>
+                                        <p>Desa Makmur, Kec. Palu Timur</p>
+                                    </div>
+                                    <div>
+                                        <label class="label">
+                                            <span class="label-text font-semibold">Fokus Komoditas</span>
+                                        </label>
+                                        <p>Padi Organik, Sayuran Hidroponik</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="label">
+                                            <span class="label-text font-semibold">Mulai Magang</span>
+                                        </label>
+                                        <p>1 Oktober 2024</p>
+                                    </div>
+                                    <div>
+                                        <label class="label">
+                                            <span class="label-text font-semibold">Berakhir</span>
+                                        </label>
+                                        <p>31 Desember 2024</p>
+                                    </div>
+                                    <div>
+                                        <label class="label">
+                                            <span class="label-text font-semibold">Jadwal</span>
+                                        </label>
+                                        <p>Senin - Jumat, 08:00 - 15:00</p>
+                                    </div>
+                                    <div class="mt-4">
+                                        <button onclick="contactMentor()" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-phone"></i> Hubungi Mentor
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tasks & Assignments -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="card bg-base-100 shadow-xl">
+                        <div class="card-body">
+                            <h3 class="card-title">Tugas Minggu Ini</h3>
+                            <div class="space-y-4">
+                                <div class="flex items-center space-x-4">
+                                    <input type="checkbox" class="checkbox checkbox-primary" checked>
+                                    <div class="flex-1">
+                                        <p class="font-semibold">Analisis pH tanah</p>
+                                        <p class="text-sm text-gray-500">Deadline: 18 Des 2024</p>
+                                    </div>
+                                    <div class="badge badge-success">Selesai</div>
+                                </div>
+
+                                <div class="flex items-center space-x-4">
+                                    <input type="checkbox" class="checkbox checkbox-primary">
+                                    <div class="flex-1">
+                                        <p class="font-semibold">Laporan mingguan budidaya</p>
+                                        <p class="text-sm text-gray-500">Deadline: 20 Des 2024</p>
+                                    </div>
+                                    <div class="badge badge-warning">Progress</div>
+                                </div>
+
+                                <div class="flex items-center space-x-4">
+                                    <input type="checkbox" class="checkbox checkbox-primary">
+                                    <div class="flex-1">
+                                        <p class="font-semibold">Praktek sistem irigasi tetes</p>
+                                        <p class="text-sm text-gray-500">Deadline: 22 Des 2024</p>
+                                    </div>
+                                    <div class="badge badge-error">Pending</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-100 shadow-xl">
+                        <div class="card-body">
+                            <h3 class="card-title">Feedback Mentor</h3>
+                            <div class="space-y-4">
+                                <div class="alert alert-success">
+                                    <i class="fas fa-thumbs-up"></i>
+                                    <div>
+                                        <h4 class="font-bold">Minggu 8</h4>
+                                        <p class="text-sm">Kemajuan sangat baik dalam penerapan teknologi hidroponik.
+                                            Terus tingkatkan!</p>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-info">
+                                    <i class="fas fa-lightbulb"></i>
+                                    <div>
+                                        <h4 class="font-bold">Minggu 7</h4>
+                                        <p class="text-sm">Perlu lebih memperhatikan timing pemupukan. Overall sudah
+                                            bagus.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Available Programs -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h2 class="card-title">Program Magang Tersedia</h2>
+                        <div class="overflow-x-auto">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Program</th>
+                                        <th>Tempat</th>
+                                        <th>Durasi</th>
+                                        <th>Komoditas</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Magang Pertanian Organik</td>
+                                        <td>CV. Organik Nusantara</td>
+                                        <td>3 Bulan</td>
+                                        <td>Sayuran, Buah</td>
+                                        <td>
+                                            <div class="badge badge-success">Tersedia</div>
+                                        </td>
+                                        <td><button class="btn btn-sm btn-primary">Daftar</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Inkubasi Teknologi Smart Farm</td>
+                                        <td>PT. Agritech Indonesia</td>
+                                        <td>6 Bulan</td>
+                                        <td>Multi Komoditas</td>
+                                        <td>
+                                            <div class="badge badge-warning">Terbatas</div>
+                                        </td>
+                                        <td><button class="btn btn-sm btn-outline">Info</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Magang Peternakan Modern</td>
+                                        <td>Koperasi Ternak Maju</td>
+                                        <td>4 Bulan</td>
+                                        <td>Sapi, Kambing</td>
+                                        <td>
+                                            <div class="badge badge-error">Penuh</div>
+                                        </td>
+                                        <td><button class="btn btn-sm btn-disabled">Tutup</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PEMBIAYAAN VIEW -->
+            <div id="pembiayaanView" class="view hidden p-4">
+                <div class="mb-6">
+                    <h1 class="text-3xl font-bold">Pembiayaan</h1>
+                    <p class="text-gray-600">Akses modal usaha melalui program KUR dan pembiayaan lainnya</p>
+                </div>
+
+                <!-- Current Application Status -->
+                <div class="card bg-base-100 shadow-xl mb-6">
+                    <div class="card-body">
+                        <h2 class="card-title">Status Pengajuan Anda</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="stat">
+                                <div class="stat-title">Nominal</div>
+                                <div class="stat-value text-success">Rp 50 Jt</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-title">Bank</div>
+                                <div class="stat-value text-sm">BRI</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-title">Status</div>
+                                <div class="stat-value text-primary text-sm">Disetujui</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-title">Tenor</div>
+                                <div class="stat-value text-sm">24 Bulan</div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Steps -->
+                        <div class="mt-6">
+                            <ul class="steps steps-horizontal w-full">
+                                <li class="step step-primary">Pengajuan</li>
+                                <li class="step step-primary">Verifikasi</li>
+                                <li class="step step-primary">Survey</li>
+                                <li class="step step-primary">Disetujui</li>
+                                <li class="step">Pencairan</li>
+                            </ul>
+                        </div>
+
+                        <div class="mt-4">
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Selamat! Pengajuan KUR Anda telah disetujui. Menunggu proses pencairan.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Available Financing -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="card bg-base-100 shadow-xl">
+                        <div class="card-body">
+                            <h3 class="card-title">Program Pembiayaan Tersedia</h3>
+                            <div class="space-y-4">
+                                <div class="border rounded-lg p-4">
+                                    <h4 class="font-bold">KUR Mikro</h4>
+                                    <p class="text-sm text-gray-600">Kredit Usaha Rakyat untuk modal kerja</p>
+                                    <div class="mt-2">
+                                        <div class="badge badge-primary">Bunga 6% p.a</div>
+                                        <div class="badge badge-secondary">Maksimal Rp 50 Jt</div>
+                                    </div>
+                                    <button onclick="applyFinancing('kur-mikro')" class="btn btn-primary btn-sm mt-4">
+                                        Ajukan
+                                    </button>
+                                </div>
+
+                                <div class="border rounded-lg p-4">
+                                    <h4 class="font-bold">KUR Kecil</h4>
+                                    <p class="text-sm text-gray-600">Untuk investasi dan modal kerja</p>
+                                    <div class="mt-2">
+                                        <div class="badge badge-primary">Bunga 6% p.a</div>
+                                        <div class="badge badge-secondary">Rp 50 Jt - 500 Jt</div>
+                                    </div>
+                                    <button onclick="applyFinancing('kur-kecil')" class="btn btn-primary btn-sm mt-4">
+                                        Ajukan
+                                    </button>
+                                </div>
+
+                                <div class="border rounded-lg p-4 opacity-50">
+                                    <h4 class="font-bold">Pembiayaan Syariah</h4>
+                                    <p class="text-sm text-gray-600">Pembiayaan berbasis syariah</p>
+                                    <div class="mt-2">
+                                        <div class="badge badge-outline">Margin 8% p.a</div>
+                                        <div class="badge badge-outline">Fleksibel</div>
+                                    </div>
+                                    <button class="btn btn-disabled btn-sm mt-4">
+                                        Segera Hadir
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-100 shadow-xl">
+                        <div class="card-body">
+                            <h3 class="card-title">Dokumen yang Diperlukan</h3>
+                            <div class="space-y-4">
+                                <div class="form-control">
+                                    <label class="cursor-pointer label">
+                                        <span class="label-text">KTP & KK</span>
+                                        <input type="checkbox" class="checkbox checkbox-success" checked disabled />
+                                    </label>
+                                </div>
+
+                                <div class="form-control">
+                                    <label class="cursor-pointer label">
+                                        <span class="label-text">Sertifikat/Surat Tanah</span>
+                                        <input type="checkbox" class="checkbox checkbox-success" checked disabled />
+                                    </label>
+                                </div>
+
+                                <div class="form-control">
+                                    <label class="cursor-pointer label">
+                                        <span class="label-text">Proposal Usaha</span>
+                                        <input type="checkbox" class="checkbox checkbox-success" checked disabled />
+                                    </label>
+                                </div>
+
+                                <div class="form-control">
+                                    <label class="cursor-pointer label">
+                                        <span class="label-text">NPWP (jika ada)</span>
+                                        <input type="checkbox" class="checkbox checkbox-warning" />
+                                    </label>
+                                </div>
+
+                                <div class="form-control">
+                                    <label class="cursor-pointer label">
+                                        <span class="label-text">Surat Rekomendasi Offtaker</span>
+                                        <input type="checkbox" class="checkbox checkbox-success" checked disabled />
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="mt-6">
+                                <button onclick="uploadDocuments()" class="btn btn-secondary btn-sm w-full">
+                                    <i class="fas fa-upload"></i> Upload Dokumen Tambahan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financing Calculator -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h2 class="card-title">Kalkulator Pembiayaan</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-4">
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Jumlah Pinjaman</span>
+                                    </label>
+                                    <input type="range" id="loanAmount" min="5000000" max="500000000" value="50000000"
+                                        class="range range-primary" oninput="calculateLoan()">
+                                    <div class="w-full flex justify-between text-xs px-2">
+                                        <span>5 Jt</span>
+                                        <span>250 Jt</span>
+                                        <span>500 Jt</span>
+                                    </div>
+                                </div>
+
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Tenor (Bulan)</span>
+                                    </label>
+                                    <select id="loanTenor" class="select select-bordered" onchange="calculateLoan()">
+                                        <option value="12">12 Bulan</option>
+                                        <option value="24" selected>24 Bulan</option>
+                                        <option value="36">36 Bulan</option>
+                                        <option value="48">48 Bulan</option>
+                                        <option value="60">60 Bulan</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Suku Bunga (%)</span>
+                                    </label>
+                                    <input type="number" id="interestRate" value="6" step="0.1"
+                                        class="input input-bordered" onchange="calculateLoan()">
+                                </div>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div class="stats stats-vertical shadow">
+                                    <div class="stat">
+                                        <div class="stat-title">Jumlah Pinjaman</div>
+                                        <div class="stat-value text-primary" id="displayAmount">Rp 50,000,000</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-title">Angsuran per Bulan</div>
+                                        <div class="stat-value text-secondary" id="monthlyPayment">Rp 2,200,000</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-title">Total Bayar</div>
+                                        <div class="stat-value text-accent" id="totalPayment">Rp 52,800,000</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VERIFIKASI VIEW (Admin) -->
+            <div id="verifikasiView" class="view hidden p-4">
+                <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h1 class="text-3xl font-bold">Verifikasi Pendaftar</h1>
+                        <p class="text-gray-600">Panel verifikasi untuk admin kabupaten/kota</p>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <div class="form-control">
+                            <select id="filterKabupaten" class="select select-bordered select-sm">
+                                <option>Semua Kabupaten</option>
+                                <option>Kota Palu</option>
+                                <option>Kabupaten Sigi</option>
+                                <option>Kabupaten Donggala</option>
+                            </select>
+                        </div>
+
+                        <div class="form-control">
+                            <select id="filterStatus" class="select select-bordered select-sm">
+                                <option>Semua Status</option>
+                                <option>Menunggu</option>
+                                <option>Disetujui</option>
+                                <option>Ditolak</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats shadow w-full mb-6">
+                    <div class="stat">
+                        <div class="stat-figure text-primary">
+                            <i class="fas fa-users text-2xl"></i>
+                        </div>
+                        <div class="stat-title">Total Pendaftar</div>
+                        <div class="stat-value text-primary">127</div>
+                        <div class="stat-desc">Bulan ini: +12</div>
+                    </div>
+
+                    <div class="stat">
+                        <div class="stat-figure text-warning">
+                            <i class="fas fa-clock text-2xl"></i>
+                        </div>
+                        <div class="stat-title">Menunggu Verifikasi</div>
+                        <div class="stat-value text-warning">23</div>
+                        <div class="stat-desc">Perlu ditindaklanjuti</div>
+                    </div>
+
+                    <div class="stat">
+                        <div class="stat-figure text-success">
+                            <i class="fas fa-check text-2xl"></i>
+                        </div>
+                        <div class="stat-title">Disetujui</div>
+                        <div class="stat-value text-success">89</div>
+                        <div class="stat-desc">Minggu ini: +8</div>
+                    </div>
+
+                    <div class="stat">
+                        <div class="stat-figure text-error">
+                            <i class="fas fa-times text-2xl"></i>
+                        </div>
+                        <div class="stat-title">Ditolak</div>
+                        <div class="stat-value text-error">15</div>
+                        <div class="stat-desc">Perlu follow up</div>
+                    </div>
+                </div>
+
+                <!-- Applicants Table -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <div class="overflow-x-auto">
+                            <table class="table table-zebra">
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            <label>
+                                                <input type="checkbox" class="checkbox" />
+                                            </label>
+                                        </th>
+                                        <th>Nama</th>
+                                        <th>NIK</th>
+                                        <th>Alamat</th>
+                                        <th>Komoditas</th>
+                                        <th>Status</th>
+                                        <th>Tanggal Daftar</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="applicantsTable">
+                                    <!-- Data will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="flex justify-center mt-4">
+                            <div class="join">
+                                <button class="join-item btn">«</button>
+                                <button class="join-item btn">1</button>
+                                <button class="join-item btn btn-active">2</button>
+                                <button class="join-item btn">3</button>
+                                <button class="join-item btn">»</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PETA VIEW -->
+            <div id="petaView" class="view hidden p-4">
+                <div class="mb-6">
+                    <h1 class="text-3xl font-bold">Pemetaan Lahan</h1>
+                    <p class="text-gray-600">Visualisasi sebaran lahan petani milenial di Sulawesi Tengah</p>
+                </div>
+
+                <!-- Map Controls -->
+                <div class="card bg-base-100 shadow-xl mb-6">
+                    <div class="card-body">
+                        <div class="flex flex-wrap gap-4 items-center">
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">Filter Wilayah</span>
+                                </label>
+                                <select id="mapFilterRegion" class="select select-bordered select-sm">
+                                    <option>Semua Wilayah</option>
+                                    <option>Kota Palu</option>
+                                    <option>Kabupaten Sigi</option>
+                                    <option>Kabupaten Donggala</option>
+                                </select>
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">Komoditas</span>
+                                </label>
+                                <select id="mapFilterCommodity" class="select select-bordered select-sm">
+                                    <option>Semua Komoditas</option>
+                                    <option>Padi</option>
+                                    <option>Jagung</option>
+                                    <option>Sayuran</option>
+                                    <option>Kakao</option>
+                                </select>
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">Status</span>
+                                </label>
+                                <select id="mapFilterStatus" class="select select-bordered select-sm">
+                                    <option>Semua Status</option>
+                                    <option>Aktif</option>
+                                    <option>Magang</option>
+                                    <option>Lulus</option>
+                                </select>
+                            </div>
+
+                            <button onclick="refreshMap()" class="btn btn-primary btn-sm">
+                                <i class="fas fa-refresh"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Map Container -->
+                <div class="card bg-base-100 shadow-xl mb-6">
+                    <div class="card-body p-0">
+                        <div id="mapContainer" class="map-container rounded-lg"></div>
+                    </div>
+                </div>
+
+                <!-- Map Legend and Statistics -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card bg-base-100 shadow-xl">
+                        <div class="card-body">
+                            <h3 class="card-title">Legenda</h3>
+                            <div class="space-y-2">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-4 h-4 bg-green-500 rounded-full"></div>
+                                    <span>Petani Aktif</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-4 h-4 bg-blue-500 rounded-full"></div>
+                                    <span>Sedang Magang</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-4 h-4 bg-orange-500 rounded-full"></div>
+                                    <span>Menunggu Verifikasi</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-4 h-4 bg-purple-500 rounded-full"></div>
+                                    <span>Lahan Tersedia</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-100 shadow-xl">
+                        <div class="card-body">
+                            <h3 class="card-title">Statistik Lahan</h3>
+                            <div class="stats stats-vertical">
+                                <div class="stat">
+                                    <div class="stat-title">Total Lahan</div>
+                                    <div class="stat-value text-primary">2,847 Ha</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-title">Lahan Produktif</div>
+                                    <div class="stat-value text-success">2,156 Ha</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-title">Rata-rata Luas</div>
+                                    <div class="stat-value text-info">2.3 Ha</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MARKETPLACE VIEW -->
+            <div id="marketplaceView" class="view hidden p-4">
+                <div class="mb-6">
+                    <h1 class="text-3xl font-bold">Marketplace</h1>
+                    <p class="text-gray-600">Platform jual beli hasil pertanian</p>
+                </div>
+
+                <!-- Marketplace Stats -->
+                <div class="stats shadow w-full mb-6">
+                    <div class="stat">
+                        <div class="stat-figure text-primary">
+                            <i class="fas fa-store text-2xl"></i>
+                        </div>
+                        <div class="stat-title">Produk</div>
+                        <div class="stat-value text-primary">245</div>
+                        <div class="stat-desc">Produk tersedia</div>
+                    </div>
+
+                    <div class="stat">
+                        <div class="stat-figure text-secondary">
+                            <i class="fas fa-handshake text-2xl"></i>
+                        </div>
+                        <div class="stat-title">Transaksi</div>
+                        <div class="stat-value text-secondary">89</div>
+                        <div class="stat-desc">Bulan ini</div>
+                    </div>
+
+                    <div class="stat">
+                        <div class="stat-figure text-accent">
+                            <i class="fas fa-truck text-2xl"></i>
+                        </div>
+                        <div class="stat-title">Offtaker</div>
+                        <div class="stat-value text-accent">12</div>
+                        <div class="stat-desc">Partner aktif</div>
+                    </div>
+
+                    <div class="stat">
+                        <div class="stat-figure text-info">
+                            <i class="fas fa-chart-line text-2xl"></i>
+                        </div>
+                        <div class="stat-title">Omzet</div>
+                        <div class="stat-value text-info text-sm">Rp 2.1M</div>
+                        <div class="stat-desc">Minggu ini</div>
+                    </div>
+                </div>
+
+                <!-- Product Categories and Search -->
+                <div class="card bg-base-100 shadow-xl mb-6">
+                    <div class="card-body">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div class="tabs tabs-boxed">
+                                <a class="tab tab-active" onclick="filterProducts('all')">Semua</a>
+                                <a class="tab" onclick="filterProducts('padi')">Padi</a>
+                                <a class="tab" onclick="filterProducts('sayuran')">Sayuran</a>
+                                <a class="tab" onclick="filterProducts('buah')">Buah</a>
+                                <a class="tab" onclick="filterProducts('kakao')">Kakao</a>
+                            </div>
+
+                            <div class="flex gap-2">
+                                <div class="form-control">
+                                    <input type="text" placeholder="Cari produk..."
+                                        class="input input-bordered input-sm" />
+                                </div>
+                                <button class="btn btn-primary btn-sm">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Products Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6" id="productsGrid">
+                    <!-- Products will be populated by JavaScript -->
+                </div>
+
+                <!-- Offtaker Section -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h2 class="card-title">Partner Offtaker</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div class="card bg-base-200">
+                                <div class="card-body">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="avatar placeholder">
+                                            <div class="bg-primary text-primary-content rounded-full w-12">
+                                                <i class="fas fa-building"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-bold">PT. Agro Sejahtera</h3>
+                                            <p class="text-sm">Pembeli Padi & Jagung</p>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4">
+                                        <div class="badge badge-success">Aktif</div>
+                                        <div class="badge badge-outline">Rating 4.8</div>
+                                    </div>
+                                    <button onclick="contactOfftaker('pt-agro')"
+                                        class="btn btn-sm btn-primary mt-4 w-full">
+                                        <i class="fas fa-phone"></i> Hubungi
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="card bg-base-200">
+                                <div class="card-body">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="avatar placeholder">
+                                            <div class="bg-secondary text-secondary-content rounded-full w-12">
+                                                <i class="fas fa-store"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-bold">CV. Fresh Market</h3>
+                                            <p class="text-sm">Sayuran & Buah Segar</p>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4">
+                                        <div class="badge badge-success">Aktif</div>
+                                        <div class="badge badge-outline">Rating 4.6</div>
+                                    </div>
+                                    <button onclick="contactOfftaker('cv-fresh')"
+                                        class="btn btn-sm btn-primary mt-4 w-full">
+                                        <i class="fas fa-phone"></i> Hubungi
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="card bg-base-200">
+                                <div class="card-body">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="avatar placeholder">
+                                            <div class="bg-accent text-accent-content rounded-full w-12">
+                                                <i class="fas fa-leaf"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-bold">Koperasi Organik</h3>
+                                            <p class="text-sm">Produk Organik</p>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4">
+                                        <div class="badge badge-warning">Pending</div>
+                                        <div class="badge badge-outline">Rating 4.9</div>
+                                    </div>
+                                    <button onclick="contactOfftaker('kop-organik')"
+                                        class="btn btn-sm btn-outline mt-4 w-full">
+                                        <i class="fas fa-clock"></i> Nego
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LAPORAN VIEW -->
+            <div id="laporanView" class="view hidden p-4">
+                <div class="mb-6">
+                    <h1 class="text-3xl font-bold">Laporan & Analitik</h1>
+                    <p class="text-gray-600">Dashboard analitik dan export laporan</p>
+                </div>
+
+                <!-- Report Controls -->
+                <div class="card bg-base-100 shadow-xl mb-6">
+                    <div class="card-body">
+                        <div class="flex flex-wrap gap-4 items-end">
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">Periode</span>
+                                </label>
+                                <select id="reportPeriod" class="select select-bordered">
+                                    <option>Minggu Ini</option>
+                                    <option>Bulan Ini</option>
+                                    <option>3 Bulan Terakhir</option>
+                                    <option>Tahun Ini</option>
+                                    <option>Custom</option>
+                                </select>
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">Wilayah</span>
+                                </label>
+                                <select id="reportRegion" class="select select-bordered">
+                                    <option>Semua Wilayah</option>
+                                    <option>Kota Palu</option>
+                                    <option>Kabupaten Sigi</option>
+                                    <option>Kabupaten Donggala</option>
+                                </select>
+                            </div>
+
+                            <button onclick="generateReport()" class="btn btn-primary">
+                                <i class="fas fa-chart-bar"></i> Generate
+                            </button>
+
+                            <div class="dropdown dropdown-end">
+                                <div tabindex="0" role="button" class="btn btn-secondary">
+                                    <i class="fas fa-download"></i> Export
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                                <ul tabindex="0"
+                                    class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                                    <li><a onclick="exportReport('pdf')"><i class="fas fa-file-pdf"></i> Export PDF</a>
+                                    </li>
+                                    <li><a onclick="exportReport('csv')"><i class="fas fa-file-csv"></i> Export CSV</a>
+                                    </li>
+                                    <li><a onclick="exportReport('excel')"><i class="fas fa-file-excel"></i> Export
+                                            Excel</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="stat bg-primary text-primary-content rounded-lg">
+                        <div class="stat-figure">
+                            <i class="fas fa-users text-2xl"></i>
+                        </div>
+                        <div class="stat-title text-primary-content">Petani Terdaftar</div>
+                        <div class="stat-value">1,247</div>
+                        <div class="stat-desc text-primary-content">↗︎ 12% dari bulan lalu</div>
+                    </div>
+
+                    <div class="stat bg-secondary text-secondary-content rounded-lg">
+                        <div class="stat-figure">
+                            <i class="fas fa-check-circle text-2xl"></i>
+                        </div>
+                        <div class="stat-title text-secondary-content">Terverifikasi</div>
+                        <div class="stat-value">892</div>
+                        <div class="stat-desc text-secondary-content">↗︎ 8% dari bulan lalu</div>
+                    </div>
+
+                    <div class="stat bg-accent text-accent-content rounded-lg">
+                        <div class="stat-figure">
+                            <i class="fas fa-graduation-cap text-2xl"></i>
+                        </div>
+                        <div class="stat-title text-accent-content">Selesai Pelatihan</div>
+                        <div class="stat-value">654</div>
+                        <div class="stat-desc text-accent-content">↗︎ 15% dari bulan lalu</div>
+                    </div>
+
+                    <div class="stat bg-info text-info-content rounded-lg">
+                        <div class="stat-figure">
+                            <i class="fas fa-money-bill-wave text-2xl"></i>
+                        </div>
+                        <div class="stat-title text-info-content">Pembiayaan Tersalur</div>
+                        <div class="stat-value text-sm">Rp 12.4M</div>
+                        <div class="stat-desc text-info-content">↗︎ 25% dari bulan lalu</div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="card bg-base-100 shadow-xl">
+                        <div class="card-body">
+                            <h3 class="card-title">Trend Pendaftaran</h3>
+                            <canvas id="registrationChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-100 shadow-xl">
+                        <div class="card-body">
+                            <h3 class="card-title">Distribusi Komoditas</h3>
+                            <canvas id="commodityChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h3 class="card-title">Data Detail</h3>
+                        <div class="overflow-x-auto">
+                            <table class="table table-zebra">
+                                <thead>
+                                    <tr>
+                                        <th>Wilayah</th>
+                                        <th>Pendaftar</th>
+                                        <th>Terverifikasi</th>
+                                        <th>Pelatihan</th>
+                                        <th>Magang</th>
+                                        <th>Pembiayaan (Rp)</th>
+                                        <th>Progress (%)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Kota Palu</td>
+                                        <td>342</td>
+                                        <td>289</td>
+                                        <td>234</td>
+                                        <td>156</td>
+                                        <td>4.2M</td>
+                                        <td>
+                                            <div class="flex items-center space-x-2">
+                                                <progress class="progress progress-success w-16" value="84"
+                                                    max="100"></progress>
+                                                <span>84%</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Kabupaten Sigi</td>
+                                        <td>298</td>
+                                        <td>245</td>
+                                        <td>198</td>
+                                        <td>142</td>
+                                        <td>3.8M</td>
+                                        <td>
+                                            <div class="flex items-center space-x-2">
+                                                <progress class="progress progress-success w-16" value="82"
+                                                    max="100"></progress>
+                                                <span>82%</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Kabupaten Donggala</td>
+                                        <td>234</td>
+                                        <td>189</td>
+                                        <td>156</td>
+                                        <td>98</td>
+                                        <td>2.9M</td>
+                                        <td>
+                                            <div class="flex items-center space-x-2">
+                                                <progress class="progress progress-warning w-16" value="78"
+                                                    max="100"></progress>
+                                                <span>78%</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Kabupaten Parigi Moutong</td>
+                                        <td>189</td>
+                                        <td>145</td>
+                                        <td>112</td>
+                                        <td>67</td>
+                                        <td>1.8M</td>
+                                        <td>
+                                            <div class="flex items-center space-x-2">
+                                                <progress class="progress progress-warning w-16" value="74"
+                                                    max="100"></progress>
+                                                <span>74%</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HELP VIEW -->
+            <div id="helpView" class="view hidden p-4">
+                <div class="mb-6">
+                    <h1 class="text-3xl font-bold">Bantuan & FAQ</h1>
+                    <p class="text-gray-600">Panduan penggunaan dan pertanyaan yang sering diajukan</p>
+                </div>
+
+                <!-- Quick Help -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="card bg-primary text-primary-content shadow-xl">
+                        <div class="card-body text-center">
+                            <i class="fas fa-phone text-4xl mb-4"></i>
+                            <h2 class="card-title justify-center">Hotline</h2>
+                            <p>0451-123-4567</p>
+                            <p class="text-sm">24/7 Customer Support</p>
+                        </div>
+                    </div>
+
+                    <div class="card bg-secondary text-secondary-content shadow-xl">
+                        <div class="card-body text-center">
+                            <i class="fas fa-envelope text-4xl mb-4"></i>
+                            <h2 class="card-title justify-center">Email</h2>
+                            <p>support@petmil-sulteng.id</p>
+                            <p class="text-sm">Respon dalam 1x24 jam</p>
+                        </div>
+                    </div>
+
+                    <div class="card bg-accent text-accent-content shadow-xl">
+                        <div class="card-body text-center">
+                            <i class="fab fa-whatsapp text-4xl mb-4"></i>
+                            <h2 class="card-title justify-center">WhatsApp</h2>
+                            <p>0812-3456-7890</p>
+                            <p class="text-sm">Chat langsung dengan admin</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card bg-base-100 shadow-xl">
+                        <div class="card-body">
+                            <h2 class="card-title">FAQ Umum</h2>
+                            <div class="space-y-4">
+                                <div class="collapse collapse-plus bg-base-200">
+                                    <input type="radio" name="faq-accordion" />
+                                    <div class="collapse-title text-sm font-medium">
+                                        Bagaimana cara mendaftar sebagai petani milenial?
+                                    </div>
+                                    <div class="collapse-content">
+                                        <p class="text-sm">Anda dapat mendaftar melalui halaman registrasi dengan
+                                            melengkapi data diri, upload KTP, dan memilih komoditas yang ingin
+                                            dikembangkan. Syarat utama adalah berusia 19-39 tahun dan berdomisili di
+                                            Sulawesi Tengah.</p>
+                                    </div>
+                                </div>
+
+                                <div class="collapse collapse-plus bg-base-200">
+                                    <input type="radio" name="faq-accordion" />
+                                    <div class="collapse-title text-sm font-medium">
+                                        Apa saja dokumen yang diperlukan untuk mendaftar?
+                                    </div>
+                                    <div class="collapse-content">
+                                        <p class="text-sm">Dokumen wajib: KTP, KK, foto diri, dan surat keterangan
+                                            domisili. Dokumen tambahan: sertifikat lahan (jika ada), pengalaman
+                                            pertanian, dan proposal usaha sederhana.</p>
+                                    </div>
+                                </div>
+
+                                <div class="collapse collapse-plus bg-base-200">
+                                    <input type="radio" name="faq-accordion" />
+                                    <div class="collapse-title text-sm font-medium">
+                                        Berapa lama proses verifikasi pendaftaran?
+                                    </div>
+                                    <div class="collapse-content">
+                                        <p class="text-sm">Proses verifikasi memakan waktu 7-14 hari kerja. Tim
+                                            verifikasi akan melakukan pengecekan dokumen dan survey lapangan jika
+                                            diperlukan.</p>
+                                    </div>
+                                </div>
+
+                                <div class="collapse collapse-plus bg-base-200">
+                                    <input type="radio" name="faq-accordion" />
+                                    <div class="collapse-title text-sm font-medium">
+                                        Apakah program ini gratis?
+                                    </div>
+                                    <div class="collapse-content">
+                                        <p class="text-sm">Ya, seluruh program pelatihan, magang, dan pendampingan
+                                            PETMIL adalah gratis. Pemerintah menyediakan fasilitas lahan, pelatihan, dan
+                                            akses pembiayaan untuk peserta.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-100 shadow-xl">
+                        <div class="card-body">
+                            <h2 class="card-title">Panduan Penggunaan</h2>
+                            <div class="space-y-4">
+                                <div class="flex items-start space-x-4">
+                                    <div class="avatar placeholder">
+                                        <div class="bg-primary text-primary-content rounded-full w-8">
+                                            <span class="text-xs">1</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold">Daftar Akun</h4>
+                                        <p class="text-sm">Lengkapi form registrasi dan upload dokumen</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start space-x-4">
+                                    <div class="avatar placeholder">
+                                        <div class="bg-secondary text-secondary-content rounded-full w-8">
+                                            <span class="text-xs">2</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold">Verifikasi</h4>
+                                        <p class="text-sm">Tunggu proses verifikasi dari admin</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start space-x-4">
+                                    <div class="avatar placeholder">
+                                        <div class="bg-accent text-accent-content rounded-full w-8">
+                                            <span class="text-xs">3</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold">Pelatihan</h4>
+                                        <p class="text-sm">Ikuti program e-learning dan pelatihan</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start space-x-4">
+                                    <div class="avatar placeholder">
+                                        <div class="bg-info text-info-content rounded-full w-8">
+                                            <span class="text-xs">4</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold">Magang</h4>
+                                        <p class="text-sm">Praktik langsung di lokasi mitra</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start space-x-4">
+                                    <div class="avatar placeholder">
+                                        <div class="bg-success text-success-content rounded-full w-8">
+                                            <span class="text-xs">5</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold">Usaha Mandiri</h4>
+                                        <p class="text-sm">Mulai usaha dengan dukungan pembiayaan</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Form -->
+                <div class="card bg-base-100 shadow-xl mt-6">
+                    <div class="card-body">
+                        <h2 class="card-title">Hubungi Kami</h2>
+                        <form onsubmit="sendMessage(event)">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Nama</span>
+                                    </label>
+                                    <input type="text" name="nama" class="input input-bordered" required>
+                                </div>
+
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Email</span>
+                                    </label>
+                                    <input type="email" name="email" class="input input-bordered" required>
+                                </div>
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">Subjek</span>
+                                </label>
+                                <input type="text" name="subjek" class="input input-bordered" required>
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">Pesan</span>
+                                </label>
+                                <textarea name="pesan" class="textarea textarea-bordered h-24" required></textarea>
+                            </div>
+
+                            <div class="form-control mt-6">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane"></i> Kirim Pesan
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SETTINGS VIEW -->
+            <div id="settingsView" class="view hidden p-4">
+                <div class="mb-6">
+                    <h1 class="text-3xl font-bold">Pengaturan</h1>
+                    <p class="text-gray-600">Kelola akun dan preferensi sistem</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Settings Menu -->
+                    <div class="card bg-base-100 shadow-xl">
+                        <div class="card-body">
+                            <h2 class="card-title">Menu Pengaturan</h2>
+                            <ul class="menu menu-compact">
+                                <li><a onclick="showSettingsTab('profile')" class="settings-tab active"
+                                        data-tab="profile">
+                                        <i class="fas fa-user"></i> Profil Akun
+                                    </a></li>
+                                <li><a onclick="showSettingsTab('security')" class="settings-tab" data-tab="security">
+                                        <i class="fas fa-shield-alt"></i> Keamanan
+                                    </a></li>
+                                <li><a onclick="showSettingsTab('notifications')" class="settings-tab"
+                                        data-tab="notifications">
+                                        <i class="fas fa-bell"></i> Notifikasi
+                                    </a></li>
+                                <li><a onclick="showSettingsTab('privacy')" class="settings-tab" data-tab="privacy">
+                                        <i class="fas fa-lock"></i> Privasi
+                                    </a></li>
+                                <li><a onclick="showSettingsTab('users')" class="settings-tab" data-tab="users">
+                                        <i class="fas fa-users-cog"></i> Manajemen User
+                                    </a></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Settings Content -->
+                    <div class="lg:col-span-2">
+                        <!-- Profile Settings -->
+                        <div id="profileSettings" class="settings-content card bg-base-100 shadow-xl">
+                            <div class="card-body">
+                                <h2 class="card-title">Pengaturan Profil</h2>
+                                <form onsubmit="updateProfile(event)">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div class="form-control">
+                                            <label class="label">
+                                                <span class="label-text">Nama Lengkap</span>
+                                            </label>
+                                            <input type="text" value="Budi Santoso" class="input input-bordered">
+                                        </div>
+
+                                        <div class="form-control">
+                                            <label class="label">
+                                                <span class="label-text">Email</span>
+                                            </label>
+                                            <input type="email" value="budi.santoso@email.com"
+                                                class="input input-bordered">
+                                        </div>
+
+                                        <div class="form-control">
+                                            <label class="label">
+                                                <span class="label-text">Nomor HP</span>
+                                            </label>
+                                            <input type="tel" value="081234567890" class="input input-bordered">
+                                        </div>
+
+                                        <div class="form-control">
+                                            <label class="label">
+                                                <span class="label-text">Tanggal Lahir</span>
+                                            </label>
+                                            <input type="date" value="1995-03-15" class="input input-bordered">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-control">
+                                        <label class="label">
+                                            <span class="label-text">Bio</span>
+                                        </label>
+                                        <textarea
+                                            class="textarea textarea-bordered">Petani milenial yang berfokus pada teknologi pertanian modern dan berkelanjutan</textarea>
+                                    </div>
+
+                                    <div class="form-control mt-6">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save"></i> Simpan Perubahan
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Security Settings -->
+                        <div id="securitySettings" class="settings-content card bg-base-100 shadow-xl hidden">
+                            <div class="card-body">
+                                <h2 class="card-title">Pengaturan Keamanan</h2>
+
+                                <div class="space-y-6">
+                                    <div class="form-control">
+                                        <h3 class="font-semibold mb-4">Ubah Password</h3>
+                                        <form onsubmit="changePassword(event)">
+                                            <div class="space-y-4">
+                                                <input type="password" placeholder="Password lama"
+                                                    class="input input-bordered w-full">
+                                                <input type="password" placeholder="Password baru"
+                                                    class="input input-bordered w-full">
+                                                <input type="password" placeholder="Konfirmasi password baru"
+                                                    class="input input-bordered w-full">
+                                                <button type="submit" class="btn btn-primary">Ubah Password</button>
+                                            </div>
+                                        </form>
+                                    </div>
+
+                                    <div class="divider"></div>
+
+                                    <div class="form-control">
+                                        <h3 class="font-semibold mb-4">Two-Factor Authentication</h3>
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <p>Aktifkan 2FA untuk keamanan ekstra</p>
+                                                <p class="text-sm text-gray-500">SMS akan dikirim ke nomor HP Anda</p>
+                                            </div>
+                                            <input type="checkbox" class="toggle toggle-primary" checked>
+                                        </div>
+                                    </div>
+
+                                    <div class="divider"></div>
+
+                                    <div class="form-control">
+                                        <h3 class="font-semibold mb-4">Riwayat Login</h3>
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between items-center p-2 bg-base-200 rounded">
+                                                <div>
+                                                    <p class="font-semibold">Chrome - Windows</p>
+                                                    <p class="text-sm text-gray-500">Palu, Sulawesi Tengah - 2 jam lalu
+                                                    </p>
+                                                </div>
+                                                <div class="badge badge-success">Aktif</div>
+                                            </div>
+
+                                            <div class="flex justify-between items-center p-2 bg-base-200 rounded">
+                                                <div>
+                                                    <p class="font-semibold">Mobile App - Android</p>
+                                                    <p class="text-sm text-gray-500">Palu, Sulawesi Tengah - 1 hari lalu
+                                                    </p>
+                                                </div>
+                                                <button class="btn btn-sm btn-error">Logout</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notification Settings -->
+                        <div id="notificationSettings" class="settings-content card bg-base-100 shadow-xl hidden">
+                            <div class="card-body">
+                                <h2 class="card-title">Pengaturan Notifikasi</h2>
+
+                                <div class="space-y-6">
+                                    <div class="form-control">
+                                        <h3 class="font-semibold mb-4">Email Notifications</h3>
+                                        <div class="space-y-4">
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <p>Update pelatihan</p>
+                                                    <p class="text-sm text-gray-500">Notifikasi jadwal dan materi baru
+                                                    </p>
+                                                </div>
+                                                <input type="checkbox" class="toggle toggle-primary" checked>
+                                            </div>
+
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <p>Status pembiayaan</p>
+                                                    <p class="text-sm text-gray-500">Update status pengajuan KUR</p>
+                                                </div>
+                                                <input type="checkbox" class="toggle toggle-primary" checked>
+                                            </div>
+
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <p>Reminder jurnal</p>
+                                                    <p class="text-sm text-gray-500">Pengingat untuk update jurnal</p>
+                                                </div>
+                                                <input type="checkbox" class="toggle toggle-primary">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="divider"></div>
+
+                                    <div class="form-control">
+                                        <h3 class="font-semibold mb-4">SMS Notifications</h3>
+                                        <div class="space-y-4">
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <p>Verifikasi login</p>
+                                                    <p class="text-sm text-gray-500">Kode OTP untuk login</p>
+                                                </div>
+                                                <input type="checkbox" class="toggle toggle-primary" checked>
+                                            </div>
+
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <p>Notifikasi penting</p>
+                                                    <p class="text-sm text-gray-500">Info penting dari program</p>
+                                                </div>
+                                                <input type="checkbox" class="toggle toggle-primary" checked>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-control mt-6">
+                                    <button onclick="saveNotificationSettings()" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Simpan Pengaturan
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Privacy Settings -->
+                        <div id="privacySettings" class="settings-content card bg-base-100 shadow-xl hidden">
+                            <div class="card-body">
+                                <h2 class="card-title">Pengaturan Privasi</h2>
+
+                                <div class="space-y-6">
+                                    <div class="form-control">
+                                        <h3 class="font-semibold mb-4">Visibilitas Profil</h3>
+                                        <div class="space-y-4">
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <p>Tampilkan profil di marketplace</p>
+                                                    <p class="text-sm text-gray-500">Offtaker dapat melihat profil Anda
+                                                    </p>
+                                                </div>
+                                                <input type="checkbox" class="toggle toggle-primary" checked>
+                                            </div>
+
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <p>Bagikan lokasi lahan</p>
+                                                    <p class="text-sm text-gray-500">Tampilkan di peta untuk penelitian
+                                                    </p>
+                                                </div>
+                                                <input type="checkbox" class="toggle toggle-primary">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="divider"></div>
+
+                                    <div class="form-control">
+                                        <h3 class="font-semibold mb-4">Data & Analytics</h3>
+                                        <div class="space-y-4">
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <p>Izinkan analitik penggunaan</p>
+                                                    <p class="text-sm text-gray-500">Membantu meningkatkan layanan</p>
+                                                </div>
+                                                <input type="checkbox" class="toggle toggle-primary" checked>
+                                            </div>
+
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <p>Bagikan data produksi</p>
+                                                    <p class="text-sm text-gray-500">Untuk riset pertanian agregat</p>
+                                                </div>
+                                                <input type="checkbox" class="toggle toggle-primary">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="divider"></div>
+
+                                    <div class="form-control">
+                                        <h3 class="font-semibold mb-4 text-error">Danger Zone</h3>
+                                        <div class="space-y-4">
+                                            <button onclick="requestDataExport()"
+                                                class="btn btn-outline btn-info w-full">
+                                                <i class="fas fa-download"></i> Export Data Saya
+                                            </button>
+
+                                            <button onclick="deleteAccount()" class="btn btn-error w-full">
+                                                <i class="fas fa-trash"></i> Hapus Akun
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- User Management -->
+                        <div id="userManagement" class="settings-content card bg-base-100 shadow-xl hidden">
+                            <div class="card-body">
+                                <h2 class="card-title">Manajemen User</h2>
+
+                                <div class="mb-6">
+                                    <div
+                                        class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                        <div>
+                                            <p>Kelola peran dan akses pengguna sistem</p>
+                                        </div>
+                                        <button onclick="addNewUser()" class="btn btn-primary">
+                                            <i class="fas fa-user-plus"></i> Tambah User
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="overflow-x-auto">
+                                    <table class="table table-zebra">
+                                        <thead>
+                                            <tr>
+                                                <th>Nama</th>
+                                                <th>Email</th>
+                                                <th>Role</th>
+                                                <th>Status</th>
+                                                <th>Last Login</th>
+                                                <th>Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <div class="flex items-center space-x-3">
+                                                        <div class="avatar">
+                                                            <div class="mask mask-squircle w-12 h-12">
+                                                                <img
+                                                                    src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMjQiIGZpbGw9IiNEMUQ1REIiLz4KPGNpcmNsZSBjeD0iMjQiIGN5PSIxOSIgcj0iNyIgZmlsbD0iIzZCNzI4MCIvPgo8cGF0aCBkPSJNOSA0MEM5IDMxLjE2IDEzIDI2IDE5IDI2SDI5QzM1IDI2IDM5IDMxLjE2IDM5IDQwVjQzSDlWNDBaIiBmaWxsPSIjNkI3MjgwIi8+Cjwvc3ZnPgo=" />
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <div class="font-bold">Ahmad Hidayat</div>
+                                                            <div class="text-sm opacity-50">Admin Kabupaten</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>ahmad@sigi.go.id</td>
+                                                <td>
+                                                    <div class="badge badge-primary">Admin Kab</div>
+                                                </td>
+                                                <td>
+                                                    <div class="badge badge-success">Aktif</div>
+                                                </td>
+                                                <td>2 jam lalu</td>
+                                                <td>
+                                                    <div class="dropdown dropdown-end">
+                                                        <div tabindex="0" role="button" class="btn btn-ghost btn-xs">⋮
+                                                        </div>
+                                                        <ul tabindex="0"
+                                                            class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                                                            <li><a onclick="editUser('ahmad')">Edit</a></li>
+                                                            <li><a onclick="resetPassword('ahmad')">Reset Password</a>
+                                                            </li>
+                                                            <li><a onclick="deactivateUser('ahmad')"
+                                                                    class="text-error">Nonaktifkan</a></li>
+                                                        </ul>
+                                                    </div>
+                                                </td>
+                                            </tr>
+
+                                            <tr>
+                                                <td>
+                                                    <div class="flex items-center space-x-3">
+                                                        <div class="avatar">
+                                                            <div class="mask mask-squircle w-12 h-12">
+                                                                <img
+                                                                    src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMjQiIGZpbGw9IiNEMUQ1REIiLz4KPGNpcmNsZSBjeD0iMjQiIGN5PSIxOSIgcj0iNyIgZmlsbD0iIzZCNzI4MCIvPgo8cGF0aCBkPSJNOSA0MEM5IDMxLjE2IDEzIDI2IDE5IDI2SDI5QzM1IDI2IDM5IDMxLjE2IDM5IDQwVjQzSDlWNDBaIiBmaWxsPSIjNkI3MjgwIi8+Cjwvc3ZnPgo=" />
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <div class="font-bold">Sari Dewi</div>
+                                                            <div class="text-sm opacity-50">Penyuluh</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>sari@palu.go.id</td>
+                                                <td>
+                                                    <div class="badge badge-secondary">Penyuluh</div>
+                                                </td>
+                                                <td>
+                                                    <div class="badge badge-success">Aktif</div>
+                                                </td>
+                                                <td>1 hari lalu</td>
+                                                <td>
+                                                    <div class="dropdown dropdown-end">
+                                                        <div tabindex="0" role="button" class="btn btn-ghost btn-xs">⋮
+                                                        </div>
+                                                        <ul tabindex="0"
+                                                            class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                                                            <li><a onclick="editUser('sari')">Edit</a></li>
+                                                            <li><a onclick="resetPassword('sari')">Reset Password</a>
+                                                            </li>
+                                                            <li><a onclick="deactivateUser('sari')"
+                                                                    class="text-error">Nonaktifkan</a></li>
+                                                        </ul>
+                                                    </div>
+                                                </td>
+                                            </tr>
+
+                                            <tr>
+                                                <td>
+                                                    <div class="flex items-center space-x-3">
+                                                        <div class="avatar">
+                                                            <div class="mask mask-squircle w-12 h-12">
+                                                                <img
+                                                                    src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMjQiIGZpbGw9IiNEMUQ1REIiLz4KPGNpcmNsZSBjeD0iMjQiIGN5PSIxOSIgcj0iNyIgZmlsbD0iIzZCNzI4MCIvPgo8cGF0aCBkPSJNOSA0MEM5IDMxLjE2IDEzIDI2IDE5IDI2SDI5QzM1IDI2IDM5IDMxLjE2IDM5IDQwVjQzSDlWNDBaIiBmaWxsPSIjNkI3MjgwIi8+Cjwvc3ZnPgo=" />
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <div class="font-bold">Bambang Susilo</div>
+                                                            <div class="text-sm opacity-50">Bank Partner</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>bambang@bri.co.id</td>
+                                                <td>
+                                                    <div class="badge badge-accent">Bank</div>
+                                                </td>
+                                                <td>
+                                                    <div class="badge badge-warning">Pending</div>
+                                                </td>
+                                                <td>Belum login</td>
+                                                <td>
+                                                    <div class="dropdown dropdown-end">
+                                                        <div tabindex="0" role="button" class="btn btn-ghost btn-xs">⋮
+                                                        </div>
+                                                        <ul tabindex="0"
+                                                            class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                                                            <li><a onclick="sendInvitation('bambang')">Kirim
+                                                                    Undangan</a></li>
+                                                            <li><a onclick="editUser('bambang')">Edit</a></li>
+                                                            <li><a onclick="deleteUser('bambang')"
+                                                                    class="text-error">Hapus</a></li>
+                                                        </ul>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <div class="mobile-nav btm-nav md:hidden">
+        <button onclick="showView('home')" class="mobile-nav-item" data-view="home">
+            <i class="fas fa-home"></i>
+            <span class="btm-nav-label">Home</span>
+        </button>
+
+        <button onclick="showView('dashboard')" class="mobile-nav-item" data-view="dashboard">
+            <i class="fas fa-tachometer-alt"></i>
+            <span class="btm-nav-label">Dashboard</span>
+        </button>
+
+        <button onclick="showView('journal')" class="mobile-nav-item" data-view="journal">
+            <i class="fas fa-book"></i>
+            <span class="btm-nav-label">Jurnal</span>
+        </button>
+
+        <button onclick="showView('elearning')" class="mobile-nav-item" data-view="elearning">
+            <i class="fas fa-graduation-cap"></i>
+            <span class="btm-nav-label">Belajar</span>
+        </button>
+
+        <button onclick="showView('help')" class="mobile-nav-item" data-view="help">
+            <i class="fas fa-question-circle"></i>
+            <span class="btm-nav-label">Bantuan</span>
+        </button>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // MOCK API DATA - GANTI DENGAN API: GET /api/mock-data
+        const mockAPI = {
+            users: [
+                {
+                    id: 1,
+                    nama: "Budi Santoso",
+                    nik: "7201234567890123",
+                    email: "budi.santoso@email.com",
+                    hp: "081234567890",
+                    alamat: "Jl. Tani Maju No. 123, Desa Sejahtera, Palu",
+                    kabupaten: "Kota Palu",
+                    komoditas: "Padi",
+                    luas_lahan: 2.5,
+                    status: "terverifikasi",
+                    tanggal_daftar: "2024-01-15"
+                }
+            ],
+
+            applicants: [
+                {
+                    id: 1,
+                    nama: "Andi Susilo",
+                    nik: "7202345678901234",
+                    alamat: "Desa Makmur, Sigi",
+                    komoditas: "Jagung",
+                    status: "menunggu",
+                    tanggal_daftar: "2024-12-10"
+                },
+                {
+                    id: 2,
+                    nama: "Siti Rahayu",
+                    nik: "7203456789012345",
+                    alamat: "Desa Subur, Donggala",
+                    komoditas: "Sayuran",
+                    status: "disetujui",
+                    tanggal_daftar: "2024-12-08"
+                }
+            ],
+
+            courses: [
+                {
+                    id: 1,
+                    title: "Teknologi Pertanian Modern",
+                    description: "Pelajari teknologi IoT, sensor, dan otomasi dalam pertanian",
+                    duration: "4 minggu",
+                    status: "completed",
+                    progress: 100,
+                    lessons: [
+                        { id: 1, title: "Pengenalan IoT", completed: true },
+                        { id: 2, title: "Sensor Tanah", completed: true },
+                        { id: 3, title: "Sistem Irigasi Otomatis", completed: true },
+                        { id: 4, title: "Monitoring Digital", completed: true }
+                    ]
+                },
+                {
+                    id: 2,
+                    title: "Budidaya Padi Organik",
+                    description: "Teknik budidaya padi organik yang menguntungkan",
+                    duration: "6 minggu",
+                    status: "in_progress",
+                    progress: 75,
+                    lessons: [
+                        { id: 1, title: "Persiapan Lahan", completed: true },
+                        { id: 2, title: "Pemilihan Bibit", completed: true },
+                        { id: 3, title: "Perawatan Organik", completed: true },
+                        { id: 4, title: "Pengendalian Hama", completed: false }
+                    ]
+                },
+                {
+                    id: 3,
+                    title: "Manajemen Keuangan Usahatani",
+                    description: "Kelola keuangan dan hitung untung rugi usaha tani",
+                    duration: "3 minggu",
+                    status: "available",
+                    progress: 0,
+                    lessons: [
+                        { id: 1, title: "Pencatatan Keuangan", completed: false },
+                        { id: 2, title: "Analisis Biaya", completed: false },
+                        { id: 3, title: "Proyeksi Keuntungan", completed: false }
+                    ]
+                }
+            ],
+
+            journalEntries: [
+                {
+                    id: 1,
+                    tanggal: "2024-12-15",
+                    aktivitas: "Panen",
+                    komoditas: "Padi",
+                    kuantitas: 2.5,
+                    satuan: "Ton",
+                    catatan: "Hasil panen memuaskan, kualitas baik"
+                },
+                {
+                    id: 2,
+                    tanggal: "2024-12-10",
+                    aktivitas: "Pemupukan",
+                    komoditas: "Padi",
+                    kuantitas: 50,
+                    satuan: "Kg",
+                    catatan: "Pemupukan urea tahap kedua"
+                }
+            ],
+
+            products: [
+                {
+                    id: 1,
+                    nama: "Beras Organik Premium",
+                    kategori: "padi",
+                    harga: 15000,
+                    satuan: "Kg",
+                    stok: 500,
+                    petani: "Budi Santoso",
+                    lokasi: "Palu"
+                },
+                {
+                    id: 2,
+                    nama: "Jagung Pipil Kering",
+                    kategori: "jagung",
+                    harga: 8000,
+                    satuan: "Kg",
+                    stok: 1200,
+                    petani: "Andi Susilo",
+                    lokasi: "Sigi"
+                }
+            ],
+
+            lands: [
+                {
+                    id: 1,
+                    petani: "Budi Santoso",
+                    koordinat: [-0.8999, 119.8707],
+                    luas: 2.5,
+                    komoditas: "Padi",
+                    status: "aktif"
+                },
+                {
+                    id: 2,
+                    petani: "Andi Susilo",
+                    koordinat: [-0.9199, 119.8907],
+                    luas: 1.8,
+                    komoditas: "Jagung",
+                    status: "magang"
+                }
+            ]
+        };
+
+        // GLOBAL VARIABLES
+        let currentUser = null;
+        let isOnline = navigator.onLine;
+        let map = null;
+
+        // UTILITY FUNCTIONS
+        function showLoading() {
+            document.getElementById('loadingSpinner').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingSpinner').classList.add('hidden');
+        }
+
+        function showToast(message, type = 'info') {
+            // Create toast notification
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type} fixed top-4 right-4 z-50 w-auto max-w-sm`;
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'info'}-circle"></i>
+                <span>${message}</span>
+            `;
+
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+        }
+
+        // NAVIGATION FUNCTIONS
+        function showView(viewName) {
+            // Hide all views
+            document.querySelectorAll('.view').forEach(view => {
+                view.classList.add('hidden');
+            });
+
+            // Show selected view
+            const targetView = document.getElementById(viewName + 'View');
+            if (targetView) {
+                targetView.classList.remove('hidden');
+
+                // Update active menu items
+                document.querySelectorAll('.menu-item, .mobile-nav-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+
+                document.querySelectorAll(`[data-view="${viewName}"]`).forEach(item => {
+                    item.classList.add('active');
+                });
+
+                // Initialize view-specific content
+                initializeView(viewName);
+            }
+        }
+
+        function initializeView(viewName) {
+            showLoading();
+
+            setTimeout(() => {
+                switch (viewName) {
+                    case 'dashboard':
+                        // GANTI DENGAN API: GET /api/dashboard
+                        break;
+                    case 'journal':
+                        loadJournalEntries();
+                        break;
+                    case 'elearning':
+                        loadCourses();
+                        break;
+                    case 'verifikasi':
+                        loadApplicants();
+                        break;
+                    case 'peta':
+                        initializeMap();
+                        break;
+                    case 'marketplace':
+                        loadProducts();
+                        break;
+                    case 'laporan':
+                        initializeCharts();
+                        break;
+                }
+
+                hideLoading();
+            }, 500);
+        }
+
+        // AUTHENTICATION FUNCTIONS
+        function handleLogin(event) {
+            event.preventDefault();
+            showLoading();
+
+            // GANTI DENGAN API: POST /api/auth/login
+            setTimeout(() => {
+                currentUser = mockAPI.users[0];
+                showToast('Login berhasil!', 'success');
+                showView('dashboard');
+                hideLoading();
+            }, 1000);
+        }
+
+        function handleRegister(event) {
+            event.preventDefault();
+            showLoading();
+
+            const formData = new FormData(event.target);
+            const userData = Object.fromEntries(formData);
+
+            // GANTI DENGAN API: POST /api/auth/register
+            setTimeout(() => {
+                showToast('Pendaftaran berhasil! Menunggu verifikasi.', 'success');
+                showView('login');
+                hideLoading();
+            }, 1500);
+        }
+
+        function showOTPLogin() {
+            // Modal for OTP login
+            const modal = document.createElement('div');
+            modal.className = 'modal modal-open';
+            modal.innerHTML = `
+                <div class="modal-box">
+                    <h3 class="font-bold text-lg mb-4">Login dengan OTP</h3>
+                    <form onsubmit="sendOTP(event)">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Nomor HP</span>
+                            </label>
+                            <input type="tel" placeholder="08xxxxxxxxxx" class="input input-bordered" required>
+                        </div>
+                        <div class="modal-action">
+                            <button type="submit" class="btn btn-primary">Kirim OTP</button>
+                            <button type="button" onclick="this.closest('.modal').remove()" class="btn btn-ghost">Batal</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function sendOTP(event) {
+            event.preventDefault();
+            // GANTI DENGAN API: POST /api/auth/send-otp
+            showToast('Kode OTP telah dikirim ke HP Anda', 'success');
+            event.target.closest('.modal').remove();
+        }
+
+        function logout() {
+            // GANTI DENGAN API: POST /api/auth/logout
+            currentUser = null;
+            showToast('Anda telah keluar', 'info');
+            showView('home');
+        }
+
+        // JOURNAL FUNCTIONS
+        function loadJournalEntries() {
+            // GANTI DENGAN API: GET /api/journal/entries
+            const container = document.getElementById('journalEntries');
+            container.innerHTML = '';
+
+            mockAPI.journalEntries.forEach(entry => {
+                const entryCard = document.createElement('div');
+                entryCard.className = 'card bg-base-100 shadow-xl';
+                entryCard.innerHTML = `
+                    <div class="card-body">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h3 class="card-title">${entry.aktivitas} - ${entry.komoditas}</h3>
+                                <p class="text-gray-600">${formatDate(entry.tanggal)}</p>
+                                <div class="flex items-center space-x-4 mt-2">
+                                    <div class="badge badge-primary">${entry.kuantitas} ${entry.satuan}</div>
+                                </div>
+                                <p class="mt-2">${entry.catatan}</p>
+                            </div>
+                            <div class="dropdown dropdown-end">
+                                <div tabindex="0" role="button" class="btn btn-ghost btn-sm">⋮</div>
+                                <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-40">
+                                    <li><a onclick="editJournalEntry(${entry.id})">Edit</a></li>
+                                    <li><a onclick="deleteJournalEntry(${entry.id})" class="text-error">Hapus</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(entryCard);
+            });
+        }
+
+        function showJournalForm() {
+            document.getElementById('journalForm').classList.remove('hidden');
+        }
+
+        function hideJournalForm() {
+            document.getElementById('journalForm').classList.add('hidden');
+        }
+
+        function addJournalEntry(event) {
+            event.preventDefault();
+            showLoading();
+
+            const formData = new FormData(event.target);
+            const entryData = Object.fromEntries(formData);
+
+            // Check if offline
+            if (!isOnline) {
+                // Store in localStorage for offline sync
+                const offlineEntries = JSON.parse(localStorage.getItem('offlineJournalEntries') || '[]');
+                offlineEntries.push({ ...entryData, id: Date.now(), offline: true });
+                localStorage.setItem('offlineJournalEntries', JSON.stringify(offlineEntries));
+
+                document.getElementById('offlineJournal').classList.remove('hidden');
+                showToast('Data disimpan offline', 'warning');
+            } else {
+                // GANTI DENGAN API: POST /api/journal/entries
+                mockAPI.journalEntries.push({
+                    id: mockAPI.journalEntries.length + 1,
+                    ...entryData
+                });
+                showToast('Entri jurnal berhasil ditambahkan!', 'success');
+            }
+
+            hideJournalForm();
+            loadJournalEntries();
+            event.target.reset();
+            hideLoading();
+        }
+
+        function syncJournalData() {
+            const offlineEntries = JSON.parse(localStorage.getItem('offlineJournalEntries') || '[]');
+
+            if (offlineEntries.length > 0) {
+                // GANTI DENGAN API: POST /api/journal/sync
+                showLoading();
+
+                setTimeout(() => {
+                    localStorage.removeItem('offlineJournalEntries');
+                    document.getElementById('offlineJournal').classList.add('hidden');
+                    showToast(`${offlineEntries.length} entri berhasil disinkronisasi`, 'success');
+                    loadJournalEntries();
+                    hideLoading();
+                }, 1000);
+            }
+        }
+
+        // E-LEARNING FUNCTIONS
+        function loadCourses() {
+            // GANTI DENGAN API: GET /api/courses
+            const container = document.getElementById('courseList');
+            container.innerHTML = '';
+
+            mockAPI.courses.forEach(course => {
+                const courseCard = document.createElement('div');
+                courseCard.className = 'card bg-base-100 shadow-xl';
+                courseCard.innerHTML = `
+                    <div class="card-body">
+                        <h2 class="card-title">${course.title}</h2>
+                        <p>${course.description}</p>
+                        <div class="flex items-center justify-between mt-4">
+                            <div class="badge badge-outline">${course.duration}</div>
+                            <div class="badge ${course.status === 'completed' ? 'badge-success' : course.status === 'in_progress' ? 'badge-warning' : 'badge-primary'}">
+                                ${course.status === 'completed' ? 'Selesai' : course.status === 'in_progress' ? 'Berlangsung' : 'Tersedia'}
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <div class="flex justify-between text-sm mb-2">
+                                <span>Progress</span>
+                                <span>${course.progress}%</span>
+                            </div>
+                            <progress class="progress progress-primary w-full" value="${course.progress}" max="100"></progress>
+                        </div>
+                        <div class="card-actions justify-end mt-4">
+                            <button onclick="openCourse(${course.id})" class="btn btn-primary">
+                                ${course.status === 'completed' ? 'Review' : course.status === 'in_progress' ? 'Lanjutkan' : 'Mulai'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(courseCard);
+            });
+        }
+
+        function openCourse(courseId) {
+            // GANTI DENGAN API: GET /api/courses/{courseId}
+            const course = mockAPI.courses.find(c => c.id === courseId);
+            if (course) {
+                document.getElementById('courseTitle').textContent = course.title;
+                loadCourseOutline(course.lessons);
+                showView('courseDetail');
+            }
+        }
+
+        function loadCourseOutline(lessons) {
+            const container = document.getElementById('courseOutline');
+            container.innerHTML = '';
+
+            lessons.forEach((lesson, index) => {
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `
+                    <a onclick="playLesson(${lesson.id})" class="${lesson.completed ? 'text-success' : ''}">
+                        <i class="fas fa-${lesson.completed ? 'check-circle' : 'play-circle'}"></i>
+                        ${lesson.title}
+                    </a>
+                `;
+                container.appendChild(listItem);
+            });
+        }
+
+        function playVideo() {
+            showToast('Video dimulai (simulasi)', 'info');
+        }
+
+        function playLesson(lessonId) {
+            document.getElementById('lessonTitle').textContent = `Lesson ${lessonId}: Materi Pembelajaran`;
+            showToast(`Memuat lesson ${lessonId}`, 'info');
+        }
+
+        function submitQuiz() {
+            // GANTI DENGAN API: POST /api/courses/quiz/submit
+            showToast('Quiz berhasil dikumpulkan! Score: 85%', 'success');
+        }
+
+        // VERIFICATION FUNCTIONS (Admin)
+        function loadApplicants() {
+            // GANTI DENGAN API: GET /api/admin/applicants
+            const container = document.getElementById('applicantsTable');
+            container.innerHTML = '';
+
+            mockAPI.applicants.forEach(applicant => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <label>
+                            <input type="checkbox" class="checkbox" />
+                        </label>
+                    </td>
+                    <td>
+                        <div class="font-bold">${applicant.nama}</div>
+                    </td>
+                    <td>${applicant.nik}</td>
+                    <td>${applicant.alamat}</td>
+                    <td>${applicant.komoditas}</td>
+                    <td>
+                        <div class="badge ${applicant.status === 'menunggu' ? 'badge-warning' : applicant.status === 'disetujui' ? 'badge-success' : 'badge-error'}">
+                            ${applicant.status}
+                        </div>
+                    </td>
+                    <td>${formatDate(applicant.tanggal_daftar)}</td>
+                    <td>
+                        <div class="flex gap-2">
+                            <button onclick="verifyApplicant(${applicant.id}, true)" class="btn btn-success btn-xs">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button onclick="verifyApplicant(${applicant.id}, false)" class="btn btn-error btn-xs">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <button onclick="viewApplicant(${applicant.id})" class="btn btn-info btn-xs">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function verifyApplicant(applicantId, approved) {
+            // GANTI DENGAN API: POST /api/admin/applicants/{applicantId}/verify
+            const action = approved ? 'disetujui' : 'ditolak';
+            showToast(`Aplikasi berhasil ${action}`, approved ? 'success' : 'error');
+            loadApplicants();
+        }
+
+        function viewApplicant(applicantId) {
+            // Show applicant detail modal
+            showToast('Membuka detail aplikasi (simulasi)', 'info');
+        }
+
+        // MAP FUNCTIONS
+        function initializeMap() {
+            if (map) {
+                map.remove();
+            }
+
+            // GANTI DENGAN API: GET /api/lands/geojson
+            map = L.map('mapContainer').setView([-0.8999, 119.8707], 10);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Add land markers
+            mockAPI.lands.forEach(land => {
+                const marker = L.marker(land.koordinat).addTo(map);
+
+                marker.bindPopup(`
+                    <div class="p-2">
+                        <h4 class="font-bold">${land.petani}</h4>
+                        <p>Luas: ${land.luas} Ha</p>
+                        <p>Komoditas: ${land.komoditas}</p>
+                        <div class="badge badge-${land.status === 'aktif' ? 'success' : 'warning'} badge-sm mt-2">
+                            ${land.status}
+                        </div>
+                    </div>
+                `);
+            });
+        }
+
+        function refreshMap() {
+            initializeMap();
+            showToast('Peta diperbarui', 'success');
+        }
+
+        // MARKETPLACE FUNCTIONS
+        function loadProducts() {
+            // GANTI DENGAN API: GET /api/marketplace/products
+            const container = document.getElementById('productsGrid');
+            container.innerHTML = '';
+
+            mockAPI.products.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'card bg-base-100 shadow-xl';
+                productCard.innerHTML = `
+                    <figure class="bg-gradient-to-r from-green-400 to-green-600 h-32 flex items-center justify-center">
+                        <i class="fas fa-seedling text-4xl text-white"></i>
+                    </figure>
+                    <div class="card-body">
+                        <h2 class="card-title text-sm">${product.nama}</h2>
+                        <div class="flex justify-between items-center">
+                            <span class="text-lg font-bold text-primary">${formatCurrency(product.harga)}/${product.satuan}</span>
+                            <div class="badge badge-outline badge-sm">Stok: ${product.stok}</div>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <p><i class="fas fa-user"></i> ${product.petani}</p>
+                            <p><i class="fas fa-map-marker-alt"></i> ${product.lokasi}</p>
+                        </div>
+                        <div class="card-actions justify-end mt-4">
+                            <button onclick="contactSeller(${product.id})" class="btn btn-primary btn-sm">
+                                <i class="fas fa-phone"></i> Hubungi
+                            </button>
+                            <button onclick="orderProduct(${product.id})" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-shopping-cart"></i> Pesan
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(productCard);
+            });
+        }
+
+        function filterProducts(category) {
+            showToast(`Filter: ${category}`, 'info');
+            loadProducts(); // In real app, filter by category
+        }
+
+        function contactSeller(productId) {
+            showToast('Menghubungi penjual (simulasi)', 'info');
+        }
+
+        function orderProduct(productId) {
+            showToast('Pemesanan berhasil dicatat', 'success');
+        }
+
+        function contactOfftaker(offtakerId) {
+            showToast('Menghubungi offtaker (simulasi)', 'info');
+        }
+
+        // FINANCING FUNCTIONS
+        function applyFinancing(type) {
+            showToast(`Mengajukan ${type.toUpperCase()} (simulasi)`, 'info');
+        }
+
+        function calculateLoan() {
+            const amount = document.getElementById('loanAmount').value;
+            const tenor = document.getElementById('loanTenor').value;
+            const rate = document.getElementById('interestRate').value;
+
+            const monthlyRate = (rate / 100) / 12;
+            const monthlyPayment = (amount * monthlyRate * Math.pow(1 + monthlyRate, tenor)) /
+                (Math.pow(1 + monthlyRate, tenor) - 1);
+            const totalPayment = monthlyPayment * tenor;
+
+            document.getElementById('displayAmount').textContent = formatCurrency(amount);
+            document.getElementById('monthlyPayment').textContent = formatCurrency(monthlyPayment);
+            document.getElementById('totalPayment').textContent = formatCurrency(totalPayment);
+        }
+
+        function uploadDocuments() {
+            showToast('Upload dokumen (simulasi)', 'info');
+        }
+
+        // REPORT FUNCTIONS
+        function initializeCharts() {
+            // Registration Trend Chart
+            const regCtx = document.getElementById('registrationChart').getContext('2d');
+            new Chart(regCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Pendaftar',
+                        data: [65, 89, 124, 189, 245, 298],
+                        borderColor: 'rgb(34, 197, 94)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Commodity Distribution Chart
+            const commCtx = document.getElementById('commodityChart').getContext('2d');
+            new Chart(commCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Padi', 'Jagung', 'Sayuran', 'Kakao', 'Lainnya'],
+                    datasets: [{
+                        data: [35, 25, 20, 15, 5],
+                        backgroundColor: [
+                            '#10B981',
+                            '#F59E0B',
+                            '#8B5CF6',
+                            '#EF4444',
+                            '#6B7280'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+        }
+
+        function generateReport() {
+            showLoading();
+            // GANTI DENGAN API: POST /api/reports/generate
+            setTimeout(() => {
+                showToast('Laporan berhasil di-generate', 'success');
+                hideLoading();
+            }, 1000);
+        }
+
+        function exportReport(format) {
+            showLoading();
+            // GANTI DENGAN API: POST /api/reports/export
+            setTimeout(() => {
+                showToast(`Laporan ${format.toUpperCase()} berhasil diunduh`, 'success');
+                hideLoading();
+            }, 1500);
+        }
+
+        // SETTINGS FUNCTIONS
+        function showSettingsTab(tabName) {
+            // Hide all settings content
+            document.querySelectorAll('.settings-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            // Remove active class from all tabs
+            document.querySelectorAll('.settings-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected content and activate tab
+            document.getElementById(tabName + 'Settings').classList.remove('hidden');
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+        }
+
+        function updateProfile(event) {
+            event.preventDefault();
+            // GANTI DENGAN API: PUT /api/profile
+            showToast('Profil berhasil diperbarui', 'success');
+        }
+
+        function changePassword(event) {
+            event.preventDefault();
+            // GANTI DENGAN API: PUT /api/auth/change-password
+            showToast('Password berhasil diubah', 'success');
+            event.target.reset();
+        }
+
+        function saveNotificationSettings() {
+            // GANTI DENGAN API: PUT /api/settings/notifications
+            showToast('Pengaturan notifikasi disimpan', 'success');
+        }
+
+        function requestDataExport() {
+            // GANTI DENGAN API: POST /api/profile/export
+            showToast('Permintaan export data sedang diproses', 'info');
+        }
+
+        function deleteAccount() {
+            if (confirm('Apakah Anda yakin ingin menghapus akun? Tindakan ini tidak dapat dibatalkan.')) {
+                // GANTI DENGAN API: DELETE /api/profile
+                showToast('Akun berhasil dihapus', 'error');
+            }
+        }
+
+        // USER MANAGEMENT FUNCTIONS
+        function addNewUser() {
+            showToast('Form tambah user (simulasi)', 'info');
+        }
+
+        function editUser(userId) {
+            showToast(`Edit user ${userId} (simulasi)`, 'info');
+        }
+
+        function resetPassword(userId) {
+            // GANTI DENGAN API: POST /api/admin/users/{userId}/reset-password
+            showToast(`Password user ${userId} berhasil direset`, 'success');
+        }
+
+        function deactivateUser(userId) {
+            // GANTI DENGAN API: PUT /api/admin/users/{userId}/deactivate
+            showToast(`User ${userId} berhasil dinonaktifkan`, 'warning');
+        }
+
+        // HELP FUNCTIONS
+        function sendMessage(event) {
+            event.preventDefault();
+            // GANTI DENGAN API: POST /api/contact/message
+            showToast('Pesan berhasil dikirim', 'success');
+            event.target.reset();
+        }
+
+        // PROFILE FUNCTIONS
+        function editProfile() {
+            showToast('Mode edit profil (simulasi)', 'info');
+        }
+
+        function contactMentor() {
+            showToast('Menghubungi mentor (simulasi)', 'info');
+        }
+
+        // THEME TOGGLE
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // SIDEBAR TOGGLE
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+        }
+
+        // ONLINE/OFFLINE STATUS
+        function updateOnlineStatus() {
+            const indicator = document.getElementById('offlineIndicator');
+
+            if (navigator.onLine) {
+                isOnline = true;
+                indicator.classList.add('hidden');
+            } else {
+                isOnline = false;
+                indicator.classList.remove('hidden');
+            }
+        }
+
+        // INITIALIZATION
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize theme
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+
+            // Initialize theme toggle
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                themeToggle.checked = savedTheme === 'dark';
+                themeToggle.addEventListener('change', toggleTheme);
+            }
+
+            // Initialize sidebar toggle
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', toggleSidebar);
+            }
+
+            // Initialize online/offline status
+            window.addEventListener('online', updateOnlineStatus);
+            window.addEventListener('offline', updateOnlineStatus);
+            updateOnlineStatus();
+
+            // Initialize loan calculator
+            if (document.getElementById('loanAmount')) {
+                calculateLoan();
+            }
+
+            // Show default view
+            showView('home');
+
+            console.log('PETMIL App initialized successfully');
+            console.log('Mock API data loaded:', mockAPI);
+        });
+    </script>
+</body>
+
+</html>
